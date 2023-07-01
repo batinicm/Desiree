@@ -1,4 +1,7 @@
 # Retrieves and manages secrets stored in Azure Key Vault
+# IMPORTANT: in order for this to work, environment variables for service principal need to be set up
+#   Reference: https://github.com/Azure/azure-sdk-for-python/blob/main/sdk/identity/azure-identity/TROUBLESHOOTING.md#troubleshoot-environmentcredential-authentication-issues
+#   Service principal secrets stored in desiree-vault
 
 import os
 from azure.keyvault.secrets import SecretClient
@@ -11,8 +14,8 @@ credential = DefaultAzureCredential()
 client = SecretClient(vault_url=kv_uri, credential=credential)
 
 
-if __name__ == '__main__':
+def get_secret(secret_name):
     print(f"Retrieving your secret from {key_vault_name}.")
-    secret = client.get_secret("LanguageAnalyzerEndpoint")
+    secret = client.get_secret(secret_name)
 
     print(secret)
