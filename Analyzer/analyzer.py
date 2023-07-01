@@ -7,6 +7,10 @@ from azure.ai.textanalytics import TextAnalyticsClient
 import vault_worker
 
 
+# if __name__ == '__main__':
+
+
+
 def analyze_text(text):
     endpoint = vault_worker.get_secret("LanguageAnalyzerEndpoint")
     key = vault_worker.get_secret("LanguageAnalyzerKey")
