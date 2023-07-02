@@ -71,8 +71,15 @@ def get_lyrics(track):
     if song is None:
         raise Exception("Song not found")
 
-    print(song.lyrics)
     return song.lyrics
+
+
+# Preprocess lyrics to eliminate part of song annotations (verse, chorus, singer...)
+# and additional details at the beginning of the song
+def prepare_for_analysis(lyrics):
+    lyrics = re.sub("\[.*\]", "", lyrics)
+    lyrics = lyrics.split("\n")
+    return "\n".join(lyrics[1:- 1])
 
 
 def analyze_text(text):
@@ -84,5 +91,8 @@ def analyze_text(text):
 
 if __name__ == '__main__':
     tracks = get_tracks()
-    lyrics = get_lyrics(tracks[0])
-    # print(lyrics)
+    lyrics = list(map(get_lyrics, tracks[0:3]))
+    
+    print(prepare_for_analysis(lyrics[2]))
+
+    #lyrics = map(prepare_for_analysis, lyrics)
