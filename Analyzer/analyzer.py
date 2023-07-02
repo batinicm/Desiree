@@ -10,6 +10,12 @@ import vault_worker
 # if __name__ == '__main__':
 
 
+# TODO: Use Spotify API to get playlist contents (aka songs in playlists)
+# Dedupe song names
+# Use song names (and artists?) to retrieve lyrics from Genius
+# Do sentiment analysis (and everything else that seems valuable - opinion mining etc, just to enhance user experience)
+# on retrieved lyrics
+# ? Store result in Azure storage account for that
 
 def analyze_text(text):
     endpoint = vault_worker.get_secret("LanguageAnalyzerEndpoint")
