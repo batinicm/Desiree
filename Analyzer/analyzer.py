@@ -7,6 +7,8 @@ from azure.ai.textanalytics import TextAnalyticsClient
 import vault_worker
 from spotipy.oauth2 import SpotifyClientCredentials
 import spotipy
+from lyricsgenius import Genius
+import re
 
 ALL_OUT_PLAYLIST_IDS = ['37i9dQZF1DX5Ejj0EkURtP', '37i9dQZF1DX4o1oenSJRJd', '37i9dQZF1DXbTxeAdrVG2l',
                         '37i9dQZF1DX4UtSsGT1Sbe']
@@ -19,6 +21,7 @@ ALL_OUT_PLAYLIST_IDS = ['37i9dQZF1DX5Ejj0EkURtP', '37i9dQZF1DX4o1oenSJRJd', '37i
 # on retrieved lyrics
 # ? Store result in Azure storage account for that
 
+# Extract necessary information from the track information retrieved from Spotify
 def extract_track_info(track):
     return {
         "Name": track['track']['name'],
@@ -27,7 +30,6 @@ def extract_track_info(track):
 
 
 # Get playlist contents
-# Information to keep: track name, track artist
 def get_tracks():
     sp = spotipy.Spotify(client_credentials_manager=SpotifyClientCredentials())
     all_tracks = []
@@ -46,12 +48,31 @@ def get_tracks():
             items = list(map(extract_track_info, response['items']))
             print(items)
             offset = offset + len(items)
-            all_tracks.append(items)
+            all_tracks = all_tracks + items
 
+    print("Total song number: " + str(len(all_tracks)))
     return all_tracks
 
 
-def get_lyrics():
+def purge_feat_from_title(title):
+    return re.sub(".feat.*", "", title)
+
+
+# Get lyrics to songs using Genius API
+def get_lyrics(track):
+    genius_token = vault_worker.get_secret("GeniusClientAccessToken")
+
+    genius = Genius(genius_token)
+    artist = genius.search_artist(next(iter(track["Artists"] or [])), max_songs=0)
+
+    song_title = purge_feat_from_title(track["Name"])
+    song = genius.search_song(song_title, artist.name)
+
+    if song is None:
+        raise Exception("Song not found")
+
+    print(song.lyrics)
+    return song.lyrics
 
 
 def analyze_text(text):
@@ -62,4 +83,6 @@ def analyze_text(text):
 
 
 if __name__ == '__main__':
-    get_tracks()
+    tracks = get_tracks()
+    lyrics = get_lyrics(tracks[0])
+    # print(lyrics)

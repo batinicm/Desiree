@@ -18,4 +18,4 @@ def get_secret(secret_name):
     print(f"Retrieving your secret from {key_vault_name}.")
     secret = client.get_secret(secret_name)
 
-    print(secret)
+    return secret.value
