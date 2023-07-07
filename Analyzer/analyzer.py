@@ -13,11 +13,10 @@ import re
 ALL_OUT_PLAYLIST_IDS = ['37i9dQZF1DX5Ejj0EkURtP', '37i9dQZF1DX4o1oenSJRJd', '37i9dQZF1DXbTxeAdrVG2l',
                         '37i9dQZF1DX4UtSsGT1Sbe']
 
-
-# TODO: Use Spotify API to get playlist contents (aka songs in playlists)
+# Use Spotify API to get playlist contents (aka songs in playlists)
 # Dedupe song names
 # Use song names (and artists?) to retrieve lyrics from Genius
-# Do sentiment analysis (and everything else that seems valuable - opinion mining etc, just to enhance user experience)
+# TODO: Do sentiment analysis (and everything else that seems valuable - opinion mining etc, just to enhance user experience)
 # on retrieved lyrics
 # ? Store result in Azure storage account for that
 
@@ -54,6 +53,7 @@ def get_tracks():
     return all_tracks
 
 
+# Purge 'feat.' from song titles, since it impacts search results on Genius
 def purge_feat_from_title(title):
     return re.sub(".feat.*", "", title)
 
@@ -71,15 +71,18 @@ def get_lyrics(track):
     if song is None:
         raise Exception("Song not found")
 
-    return song.lyrics
+    track["Lyrics"] = song.lyrics
+    return track
 
 
 # Preprocess lyrics to eliminate part of song annotations (verse, chorus, singer...)
 # and additional details at the beginning of the song
-def prepare_for_analysis(lyrics):
-    lyrics = re.sub("\[.*\]", "", lyrics)
+def prepare_for_analysis(track):
+    lyrics = re.sub("\[.*\]", "", track["Lyrics"])
     lyrics = lyrics.split("\n")
-    return "\n".join(lyrics[1:- 1])
+    track["Lyrics"] = "\n".join(lyrics[1:- 1])
+
+    return track
 
 
 def analyze_text(text):
@@ -91,8 +94,7 @@ def analyze_text(text):
 
 if __name__ == '__main__':
     tracks = get_tracks()
-    lyrics = list(map(get_lyrics, tracks[0:3]))
-    
-    print(prepare_for_analysis(lyrics[2]))
+    lyrics = map(get_lyrics, tracks)
+    lyrics = map(prepare_for_analysis, lyrics)
 
-    #lyrics = map(prepare_for_analysis, lyrics)
+    # TODO: upload songs to storage account/sql database so lyrics don't have to be queried each time
