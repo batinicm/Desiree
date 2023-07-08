@@ -9,9 +9,13 @@ from spotipy.oauth2 import SpotifyClientCredentials
 import spotipy
 from lyricsgenius import Genius
 import re
+from azure.data.tables import TableServiceClient
+from Model.track_class import Track
 
 ALL_OUT_PLAYLIST_IDS = ['37i9dQZF1DX5Ejj0EkURtP', '37i9dQZF1DX4o1oenSJRJd', '37i9dQZF1DXbTxeAdrVG2l',
                         '37i9dQZF1DX4UtSsGT1Sbe']
+
+LYRICS_TABLE_NAME = 'Lyrics'
 
 # Use Spotify API to get playlist contents (aka songs in playlists)
 # Dedupe song names
@@ -22,10 +26,7 @@ ALL_OUT_PLAYLIST_IDS = ['37i9dQZF1DX5Ejj0EkURtP', '37i9dQZF1DX4o1oenSJRJd', '37i
 
 # Extract necessary information from the track information retrieved from Spotify
 def extract_track_info(track):
-    return {
-        "Name": track['track']['name'],
-        "Artists": [artist['name'] for artist in track['track']['artists']]
-    }
+    return Track(spotify_id=track['track']['id'], name=track['track']['name'], artists=[artist['name'] for artist in track['track']['artists']])
 
 
 # Get playlist contents
@@ -63,26 +64,35 @@ def get_lyrics(track):
     genius_token = vault_worker.get_secret("GeniusClientAccessToken")
 
     genius = Genius(genius_token)
-    artist = genius.search_artist(next(iter(track["Artists"] or [])), max_songs=0)
+    artist = genius.search_artist(next(iter(track.artists or [])), max_songs=0)
 
-    song_title = purge_feat_from_title(track["Name"])
+    song_title = purge_feat_from_title(track.name)
     song = genius.search_song(song_title, artist.name)
 
     if song is None:
         raise Exception("Song not found")
 
-    track["Lyrics"] = song.lyrics
+    track.lyrics = song.lyrics
     return track
 
 
 # Preprocess lyrics to eliminate part of song annotations (verse, chorus, singer...)
 # and additional details at the beginning of the song
 def prepare_for_analysis(track):
-    lyrics = re.sub("\[.*\]", "", track["Lyrics"])
+    lyrics = re.sub("\[.*\]", "", track.lyrics)
     lyrics = lyrics.split("\n")
-    track["Lyrics"] = "\n".join(lyrics[1:- 1])
+    track.lyrics = "\n".join(lyrics[1:- 1])
 
     return track
+
+
+def store_lyrics(lyrics):
+    connection_string = vault_worker.get_secret("StorageAccountConnectionString")
+    table_service_client = TableServiceClient.from_connection_string(conn_str=connection_string)
+    table_client = table_service_client.get_table_client(table_name=LYRICS_TABLE_NAME)
+
+    # Desiree partition key: first artist name
+    # Row key: song spotify id - from the class itself (id.name? for easier search?)
 
 
 def analyze_text(text):
@@ -96,5 +106,7 @@ if __name__ == '__main__':
     tracks = get_tracks()
     lyrics = map(get_lyrics, tracks)
     lyrics = map(prepare_for_analysis, lyrics)
+
+    store_lyrics(lyrics)
 
     # TODO: upload songs to storage account/sql database so lyrics don't have to be queried each time
