@@ -86,13 +86,37 @@ def prepare_for_analysis(track):
     return track
 
 
+# Check if any track has been written to the storage: if yes, no additional querying of Spotify/Genius is needed
+# in order to obtain track names, artists and lyrics
+def check_storage_created():
+    connection_string = vault_worker.get_secret("StorageAccountConnectionString")
+    table_service_client = TableServiceClient.from_connection_string(conn_str=connection_string)
+    table_client = table_service_client.get_table_client(table_name=LYRICS_TABLE_NAME)
+    entities = table_client.query_entities(query_filter="PartitionKey ne ''", results_per_page=1)
+    return len(list(entities)) != 0
+
+
+# Partition key: first artist name
+# Row key: song spotify id - from the class itself (id.name? for easier search?)
+def store_single_track(track, table_client):
+    table_entity = {
+        u'PartitionKey': next(iter(track.artists or [])),
+        u'RowKey': track.spotify_id,
+        u'TrackName': track.name,
+        u'Artists': ",".join(track.artists),
+        u'Lyrics': track.lyrics
+    }
+    table_client.create_entity(entity=table_entity)
+
+
+# Store song with lyrics in Azure Storage Account
 def store_lyrics(lyrics):
     connection_string = vault_worker.get_secret("StorageAccountConnectionString")
     table_service_client = TableServiceClient.from_connection_string(conn_str=connection_string)
     table_client = table_service_client.get_table_client(table_name=LYRICS_TABLE_NAME)
 
-    # Desiree partition key: first artist name
-    # Row key: song spotify id - from the class itself (id.name? for easier search?)
+    for lyric in lyrics:
+        store_single_track(lyric, table_client)
 
 
 def analyze_text(text):
@@ -103,10 +127,9 @@ def analyze_text(text):
 
 
 if __name__ == '__main__':
-    tracks = get_tracks()
-    lyrics = map(get_lyrics, tracks)
-    lyrics = map(prepare_for_analysis, lyrics)
 
-    store_lyrics(lyrics)
-
-    # TODO: upload songs to storage account/sql database so lyrics don't have to be queried each time
+    if not check_storage_created():
+        tracks = get_tracks()
+        lyrics = map(get_lyrics, tracks)
+        lyrics = map(prepare_for_analysis, lyrics)
+        store_lyrics(lyrics)
