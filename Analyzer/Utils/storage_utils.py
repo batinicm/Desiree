@@ -1,7 +1,8 @@
 import pandas
 from azure.data.tables import TableServiceClient
+
+import analyzer
 from . import vault_utils
-from analyzer import LYRICS_TABLE_NAME
 
 
 def get_table_client(table_name):
@@ -67,4 +68,17 @@ def store_lyrics(tracks):
     grouped = operations.groupby('PartitionKey').agg(list)
 
     for _, group in grouped.iterrows():
-        store_transaction(LYRICS_TABLE_NAME, group['Operation'])
+        store_transaction(analyzer.LYRICS_TABLE_NAME, group['Operation'])
+
+
+def store_sentiment(sentiments):
+    table_client = get_table_client(analyzer.SENTIMENT_TABLE_NAME)
+
+    for lyrics, sentiment in sentiments:
+        entity = {
+            'PartitionKey': lyrics['PartitionKey'],
+            'RowKey': lyrics['RowKey'],
+            'Name': lyrics['Name'],
+            'Sentiment': sentiment
+        }
+        table_client.create_entity(entity)
