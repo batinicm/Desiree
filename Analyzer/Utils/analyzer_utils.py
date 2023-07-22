@@ -51,12 +51,8 @@ def analyze_text(lyrics):
     key = vault_utils.get_secret("LanguageAnalyzerKey")
     text_analytics_client = TextAnalyticsClient(endpoint, AzureKeyCredential(key))
 
-    lyrics_for_analysis = map(
-        lambda lyric: {"PartitionKey": lyric["PartitionKey"], "RowKey": lyric["RowKey"], "Lyrics": lyric["Lyrics"]},
-        lyrics)
-
     sentiments = list()
-    for entity in lyrics_for_analysis:
+    for entity in lyrics:
         result = text_analytics_client.analyze_sentiment([entity["Lyrics"]], show_opinion_mining=True)
         lyric_result = [l for l in result if not l.is_error]
 
@@ -66,3 +62,25 @@ def analyze_text(lyrics):
             sentiments.append(get_max_score_sentiment(lyric_result[0]))
 
     return zip(lyrics, sentiments)
+
+
+def extract_key_phrases(lyrics):
+    endpoint = vault_utils.get_secret("LanguageAnalyzerEndpoint")
+    key = vault_utils.get_secret("LanguageAnalyzerKey")
+    text_analytics_client = TextAnalyticsClient(endpoint, AzureKeyCredential(key))
+
+    phrases = list()
+    for entity in lyrics:
+        result = text_analytics_client.extract_key_phrases([entity["Lyrics"]])
+
+        if len(result) == 0:
+            phrases.append([])
+        else:
+            phr = result[0]
+            if not phr.is_error:
+                phrases.append(result[0].key_phrases)
+            else:
+                phrases.append([])
+
+    return zip(lyrics, phrases)
+

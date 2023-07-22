@@ -82,3 +82,16 @@ def store_sentiment(sentiments):
             'Sentiment': sentiment
         }
         table_client.create_entity(entity)
+
+
+def store_phrases(phrases):
+    table_client = get_table_client(analyzer.PHRASES_TABLE_NAME)
+
+    for lyrics, phrase in phrases:
+        entity = {
+            'PartitionKey': lyrics['PartitionKey'],
+            'RowKey': lyrics['RowKey'],
+            'Name': lyrics['Name'],
+            'Phrases': ",".join(phrase)
+        }
+        table_client.create_entity(entity)
