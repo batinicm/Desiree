@@ -1,25 +1,27 @@
 # Analyze initial corpus of song lyrics to have for app startup
 # 1. Get song lyrics for current top 40, 80s, 90s, 00s and 10s classics
 # 2. Analyze song lyrics and assign sentiment to them
-import os
-from azure.core.credentials import AzureKeyCredential
-from azure.ai.textanalytics import TextAnalyticsClient
-import vault_worker
-from spotipy.oauth2 import SpotifyClientCredentials
-import spotipy
-from lyricsgenius import Genius
 import re
-from azure.data.tables import TableServiceClient
-from Model.track_class import Track
+
 import pandas
+import spotipy
 from azure.ai.textanalytics import TextAnalyticsClient
 from azure.core.credentials import AzureKeyCredential
+from azure.data.tables import TableServiceClient
+from lyricsgenius import Genius
+from spotipy.oauth2 import SpotifyClientCredentials
+
+import vault_utils
+import storage_utils
+from Model.track_class import Track
 
 ALL_OUT_PLAYLIST_IDS = ['37i9dQZF1DX5Ejj0EkURtP', '37i9dQZF1DX4o1oenSJRJd', '37i9dQZF1DXbTxeAdrVG2l',
                         '37i9dQZF1DX4UtSsGT1Sbe']
 LYRICS_TABLE_NAME = 'Lyrics'
-BATCH_OPERATION_COUNT = 20
 LYRICS_TABLE_ENTITY_COLUMNS = ['Partition', 'RowKey', 'TrackName', 'Artists', 'Lyrics']
+BATCH_OPERATION_COUNT = 20
+SENTIMENT_TABLE_NAME = 'Sentiments'
+SENTIMENT_TABLE_ENTITY_COLUMNS = ['Partition', 'RowKey', 'Sentiment']
 
 
 # Use Spotify API to get playlist contents (aka songs in playlists)
@@ -70,7 +72,7 @@ def purge_feat_from_title(title):
 # Get lyrics to songs using Genius API
 def get_lyrics(track):
     print("Fetching lyrics")
-    genius_token = vault_worker.get_secret("GeniusClientAccessToken")
+    genius_token = vault_utils.get_secret("GeniusClientAccessToken")
 
     genius = Genius(access_token=genius_token, sleep_time=1, retries=5)
     artist = genius.search_artist(next(iter(track.artists or [])), max_songs=0)
@@ -92,7 +94,7 @@ def get_lyrics(track):
 def process_lyrics_for_analysis(lyrics):
     cleaned_lyrics = re.sub("\[.*\]", "", lyrics)
     cleaned_lyrics = cleaned_lyrics.split("\n")
-    return "\n".join(cleaned_lyrics[1:- 1])
+    return ".".join(cleaned_lyrics[1:- 1])
 
 
 # Remove duplicate songs (recognized by the same spotify guid)
@@ -111,26 +113,6 @@ def prepare_for_analysis(tracks):
 
     dataframe['Lyrics'] = list(map(process_lyrics_for_analysis, dataframe['Lyrics']))
     return dataframe
-
-
-# Check if any track has been written to the storage: if yes, no additional querying of Spotify/Genius is needed
-# in order to obtain track names, artists and lyrics
-def check_storage_created():
-    connection_string = vault_worker.get_secret("StorageAccountConnectionString")
-    table_service_client = TableServiceClient.from_connection_string(conn_str=connection_string)
-    table_client = table_service_client.get_table_client(table_name=LYRICS_TABLE_NAME)
-    entities = table_client.query_entities(query_filter="PartitionKey ne ''", results_per_page=1)
-    return len(list(entities)) != 0
-
-
-def delete_entities():
-    connection_string = vault_worker.get_secret("StorageAccountConnectionString")
-    table_service_client = TableServiceClient.from_connection_string(conn_str=connection_string)
-    table_client = table_service_client.get_table_client(table_name=LYRICS_TABLE_NAME)
-    entities = table_client.query_entities(query_filter="PartitionKey ne ''")
-
-    for entity in entities:
-        table_client.delete_entity(entity["PartitionKey"], entity["RowKey"])
 
 
 def get_partition_key(artists):
@@ -155,38 +137,56 @@ def create_lyric_table_operation(track_row):
 
 # Store song with lyrics in Azure Storage Account
 def store_lyrics(tracks):
-    print("Store lyrics started")
-
-    connection_string = vault_worker.get_secret("StorageAccountConnectionString")
-    table_service_client = TableServiceClient.from_connection_string(conn_str=connection_string)
-    table_client = table_service_client.get_table_client(table_name=LYRICS_TABLE_NAME)
-
     operations = pandas.DataFrame()
     operations['PartitionKey'] = list(map(get_partition_key, tracks['Artists']))
     operations['Operation'] = list(map(create_lyric_table_operation, tracks.iterrows()))
 
-    # After groupby - list of table_entity for each partition key
     grouped = operations.groupby('PartitionKey').agg(list)
 
     for _, group in grouped.iterrows():
-        table_client.submit_transaction(group['Operation'])
-
-    print("Lyrics stored")
+        storage_utils.store_transaction(LYRICS_TABLE_NAME, group['Operation'])
 
 
-def analyze_text(text):
-    endpoint = vault_worker.get_secret("LanguageAnalyzerEndpoint")
-    key = vault_worker.get_secret("LanguageAnalyzerKey")
+def get_max_score_sentiment(l):
+    if (l.confidence_scores.positive >= l.confidence_scores.negative) and (
+            l.confidence_scores.positive >= l.confidence_scores.neutral):
+        return "positive"
+    elif (l.confidence_scores.negative >= l.confidence_scores.positive) and (
+            l.confidence_scores.negative >= l.confidence_scores.neutral):
+        return "negative"
+    else:
+        return "neutral"
 
+
+# TODO: storage: new table with same partition and row key as in Lyrics table
+# Store overall sentiment: by examining the confidence scores and determining the max one
+# Store sentence target and sentiment ?? sentiment of target is also max of confidence scores
+def analyze_text(lyrics):
+    endpoint = vault_utils.get_secret("LanguageAnalyzerEndpoint")
+    key = vault_utils.get_secret("LanguageAnalyzerKey")
     text_analytics_client = TextAnalyticsClient(endpoint, AzureKeyCredential(key))
+
+    lyrics_for_analysis = map(
+        lambda lyric: {"PartitionKey": lyric["PartitionKey"], "RowKey": lyric["RowKey"], "Lyrics": lyric["Lyrics"]},
+        lyrics)
+
+    for entity in lyrics_for_analysis:
+        result = text_analytics_client.analyze_sentiment([entity["Lyrics"]], show_opinion_mining=True)
+        lyric_result = [l for l in result if not l.is_error]
+
+        for l in lyric_result:
+            sentiment = get_max_score_sentiment(l)
 
 
 if __name__ == '__main__':
-    # delete_entities()
+    storage_utils.delete_entities(LYRICS_TABLE_NAME)
 
-    if not check_storage_created():
+    if not storage_utils.check_storage_created(LYRICS_TABLE_NAME):
         for playlist in ALL_OUT_PLAYLIST_IDS:
             tracks = get_tracks(playlist)
             lyrics = map(get_lyrics, tracks)
             lyrics = prepare_for_analysis(lyrics)
             store_lyrics(lyrics)
+
+    lyrics = list(storage_utils.get_from_storage(LYRICS_TABLE_NAME))
+    analyze_text(lyrics)
