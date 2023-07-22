@@ -2,20 +2,16 @@
 # 1. Get song lyrics for current top 40, 80s, 90s, 00s and 10s classics
 # 2. Analyze song lyrics and assign sentiment to them
 
-import storage_utils
-import lyric_fetch_utils
-import analyzer_utils
+from Utils import storage_utils, analyzer_utils, lyric_fetch_utils
 
 ALL_OUT_PLAYLIST_IDS = ['37i9dQZF1DX5Ejj0EkURtP', '37i9dQZF1DX4o1oenSJRJd', '37i9dQZF1DXbTxeAdrVG2l',
                         '37i9dQZF1DX4UtSsGT1Sbe']
 LYRICS_TABLE_NAME = 'Lyrics'
-LYRICS_TABLE_ENTITY_COLUMNS = ['Partition', 'RowKey', 'TrackName', 'Artists', 'Lyrics']
-BATCH_OPERATION_COUNT = 20
 SENTIMENT_TABLE_NAME = 'Sentiments'
-SENTIMENT_TABLE_ENTITY_COLUMNS = ['Partition', 'RowKey', 'Sentiment']
 
 # TODO: Do sentiment analysis (and everything else that seems valuable - opinion mining etc, just to enhance user
 #  experience) on retrieved lyrics
+# TODO: opinion mining? How does it relate to recommendations?
 
 
 if __name__ == '__main__':
