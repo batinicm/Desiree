@@ -4,7 +4,7 @@ import pandas
 from azure.ai.textanalytics import TextAnalyticsClient
 from azure.core.credentials import AzureKeyCredential
 
-import vault_utils
+from . import vault_utils
 from Model.track_class import Track
 
 

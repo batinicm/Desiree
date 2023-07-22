@@ -1,6 +1,6 @@
 import pandas
 from azure.data.tables import TableServiceClient
-import vault_utils
+from . import vault_utils
 from analyzer import LYRICS_TABLE_NAME
 
 

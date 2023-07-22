@@ -4,7 +4,7 @@ from lyricsgenius import Genius
 import spotipy
 from spotipy import SpotifyClientCredentials
 
-import vault_utils
+from . import vault_utils
 from Model.track_class import Track
 
 
