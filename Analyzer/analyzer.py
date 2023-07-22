@@ -4,15 +4,12 @@
 import re
 
 import pandas
-import spotipy
 from azure.ai.textanalytics import TextAnalyticsClient
 from azure.core.credentials import AzureKeyCredential
-from azure.data.tables import TableServiceClient
-from lyricsgenius import Genius
-from spotipy.oauth2 import SpotifyClientCredentials
 
 import vault_utils
 import storage_utils
+import lyric_fetch_utils
 from Model.track_class import Track
 
 ALL_OUT_PLAYLIST_IDS = ['37i9dQZF1DX5Ejj0EkURtP', '37i9dQZF1DX4o1oenSJRJd', '37i9dQZF1DXbTxeAdrVG2l',
@@ -24,69 +21,8 @@ SENTIMENT_TABLE_NAME = 'Sentiments'
 SENTIMENT_TABLE_ENTITY_COLUMNS = ['Partition', 'RowKey', 'Sentiment']
 
 
-# Use Spotify API to get playlist contents (aka songs in playlists)
-# Dedupe song names
-# Use song names (and artists?) to retrieve lyrics from Genius
 # TODO: Do sentiment analysis (and everything else that seems valuable - opinion mining etc, just to enhance user experience)
 # on retrieved lyrics
-# ? Store result in Azure storage account for that
-
-# Extract necessary information from the track information retrieved from Spotify
-def extract_track_info(track):
-    return Track(spotify_id=track['track']['id'], name=track['track']['name'],
-                 artists=[artist['name'] for artist in track['track']['artists']])
-
-
-# Get playlist contents
-def get_tracks(playlist_id):
-    print("Starting get_tracks:")
-
-    sp = spotipy.Spotify(client_credentials_manager=SpotifyClientCredentials())
-    all_tracks = []
-
-    pl_id = 'spotify:playlist:' + playlist_id
-    offset = 0
-    while True:
-        response = sp.playlist_items(pl_id,
-                                     offset=offset,
-                                     fields='items',
-                                     additional_types=['track'])
-        if len(response['items']) == 0:
-            break
-
-        items = list(map(extract_track_info, response['items']))
-        print(items)
-        offset = offset + len(items)
-        all_tracks = all_tracks + items
-
-    print("Total song number: " + str(len(all_tracks)))
-    print("get_tracks done.")
-    return all_tracks
-
-
-# Purge 'feat.' from song titles, since it impacts search results on Genius
-def purge_feat_from_title(title):
-    return re.sub(".feat.*", "", title)
-
-
-# Get lyrics to songs using Genius API
-def get_lyrics(track):
-    print("Fetching lyrics")
-    genius_token = vault_utils.get_secret("GeniusClientAccessToken")
-
-    genius = Genius(access_token=genius_token, sleep_time=1, retries=5)
-    artist = genius.search_artist(next(iter(track.artists or [])), max_songs=0)
-
-    song_title = purge_feat_from_title(track.name)
-    song = genius.search_song(song_title, artist.name)
-
-    if song is None:
-        track.lyrics = ""
-    else:
-        track.lyrics = song.lyrics
-
-    print("Lyrics fetched")
-    return track
 
 
 # Preprocess lyrics to eliminate part of song annotations (verse, chorus, singer...)
@@ -100,7 +36,7 @@ def process_lyrics_for_analysis(lyrics):
 # Remove duplicate songs (recognized by the same spotify guid)
 # Remove rows which have empty 'Lyrics' column
 # Prepare lyrics for analysis
-def prepare_for_analysis(tracks):
+def prepare_lyrics_for_analysis(tracks):
     dataframe = pandas.DataFrame(map(Track.to_dict, tracks))
     print(dataframe)
 
@@ -183,9 +119,9 @@ if __name__ == '__main__':
 
     if not storage_utils.check_storage_created(LYRICS_TABLE_NAME):
         for playlist in ALL_OUT_PLAYLIST_IDS:
-            tracks = get_tracks(playlist)
-            lyrics = map(get_lyrics, tracks)
-            lyrics = prepare_for_analysis(lyrics)
+            tracks = lyric_fetch_utils.get_tracks(playlist)
+            lyrics = map(lyric_fetch_utils.get_lyrics, tracks)
+            lyrics = prepare_lyrics_for_analysis(lyrics)
             store_lyrics(lyrics)
 
     lyrics = list(storage_utils.get_from_storage(LYRICS_TABLE_NAME))
