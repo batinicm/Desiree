@@ -33,10 +33,22 @@ def process_stored_data_for_tokenization(sentiments, phrases):
     return joined
 
 
+def recommend():
+    # For recommendation: tokenize all data, find similarities matrix for other songs and put out top 10 songs
+    # ranked by similarity with the input song
+    # similarities = cosine_similarity(tfidf_matrix)
+
+
+# General flow of action:
+# search for song name and artist - through spotify api get id
+# check if song already present in data TODO: see if you can store recommendation results - like spotify ids or similar
+# scrape for lyrics
+# get sentiment and key phrases
+# store sentiment and phrases for future use
+# use sentiment and key phrases to do tokenization for recommendation
+# churn out top 10 recommended songs spotify id
+# put into queue/playlist/play next and display on webpage
 if __name__ == '__main__':
-    # Get stored data
-    # Tokenize
-    # Store tokenized data
     stored_sentiments = storage_utils.get_from_storage(constants.SENTIMENT_TABLE_NAME)
     stored_phrases = storage_utils.get_from_storage(constants.PHRASES_TABLE_NAME)
 
@@ -45,14 +57,4 @@ if __name__ == '__main__':
     tfidf = TfidfVectorizer()
     tfidf_matrix = tfidf.fit_transform(stored_data['ForTokenization'])
 
-    # Zip all token dataframe columns into one
-    # Join stored data and token dataframes by index
-    # Store dataframe
-    zipped_tokens = pandas.DataFrame(tfidf_matrix.todense()).apply(lambda x: ';'.join(x.astype(str)), axis=1).to_frame()
-    full_info = stored_data.join(zipped_tokens).drop(['ForTokenization'], axis=1)
-    full_info.columns = ['PartitionKey', 'RowKey', 'Name', 'Tokens']
-    storage_utils.store_tokens(full_info)
-
-    # For recommendation: tokenize input data, find similarities matrix for other songs and put out top 10 songs
-    # ranked by similarity with the input song
-    # similarities = cosine_similarity(tfidf_matrix)
+    # TODO: do recommendation for songs in database and see if result can be stored somehow
