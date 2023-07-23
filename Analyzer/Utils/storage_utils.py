@@ -100,7 +100,7 @@ def store_phrases(phrases):
 def store_tokens(tokens_df):
     table_client = get_table_client(constants.TOKENS_TABLE_NAME)
 
-    for _, row in tokens_df:
+    for _, row in tokens_df.iterrows():
         entity = {
             'PartitionKey': row['PartitionKey'],
             'RowKey': row['RowKey'],

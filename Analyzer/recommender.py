@@ -23,12 +23,12 @@ def process_stored_data_for_tokenization(sentiments, phrases):
     #   RowKey(spotify id)
     #   Name
     #   ForTokenization (sentiment + key phrases)
-    sentiment_df = pandas.DataFrame(sentiments).drop(['Timestamp'], axis=1)
-    phrases_df = pandas.DataFrame(phrases).drop(['Timestamp'], axis=1)
+    sentiment_df = pandas.DataFrame(sentiments)
+    phrases_df = pandas.DataFrame(phrases)
 
     joined = pd.merge(sentiment_df, phrases_df, how='left', on=['PartitionKey', 'RowKey', 'Name'])
     joined['ForTokenization'] = joined['Sentiment'].str.cat(joined['Phrases'], sep=",")
-    joined.drop(['Sentiment', 'Phrases'], axis=1)
+    joined.drop(['Sentiment', 'Phrases'], axis=1, inplace=True)
 
     return joined
 
@@ -37,7 +37,6 @@ if __name__ == '__main__':
     # Get stored data
     # Tokenize
     # Store tokenized data
-
     stored_sentiments = storage_utils.get_from_storage(constants.SENTIMENT_TABLE_NAME)
     stored_phrases = storage_utils.get_from_storage(constants.PHRASES_TABLE_NAME)
 
@@ -46,9 +45,14 @@ if __name__ == '__main__':
     tfidf = TfidfVectorizer()
     tfidf_matrix = tfidf.fit_transform(stored_data['ForTokenization'])
 
+    # Zip all token dataframe columns into one
+    # Join stored data and token dataframes by index
+    # Store dataframe
+    zipped_tokens = pandas.DataFrame(tfidf_matrix.todense()).apply(lambda x: ';'.join(x.astype(str)), axis=1).to_frame()
+    full_info = stored_data.join(zipped_tokens).drop(['ForTokenization'], axis=1)
+    full_info.columns = ['PartitionKey', 'RowKey', 'Name', 'Tokens']
+    storage_utils.store_tokens(full_info)
 
     # For recommendation: tokenize input data, find similarities matrix for other songs and put out top 10 songs
     # ranked by similarity with the input song
     # similarities = cosine_similarity(tfidf_matrix)
-
-
