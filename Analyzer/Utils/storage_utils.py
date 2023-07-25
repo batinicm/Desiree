@@ -1,5 +1,8 @@
+import collections.abc
+
 import pandas
 from azure.data.tables import TableServiceClient
+from azure.storage.blob import BlobServiceClient
 
 from Model import constants
 from . import vault_utils
@@ -9,6 +12,12 @@ def get_table_client(table_name):
     connection_string = vault_utils.get_secret("StorageAccountConnectionString")
     table_service_client = TableServiceClient.from_connection_string(conn_str=connection_string)
     return table_service_client.get_table_client(table_name=table_name)
+
+
+def get_blob_client(container_name, blob_name):
+    connection_string = vault_utils.get_secret("StorageAccountConnectionString")
+    blob_service_client = BlobServiceClient.from_connection_string(connection_string)
+    return blob_service_client.get_blob_client(container_name, blob_name)
 
 
 def check_storage_created(table_name):
@@ -39,8 +48,13 @@ def get_from_storage(table_name):
     return table_client.query_entities(query_filter="PartitionKey ne ''")
 
 
+def get_from_blob(container_name, blob_name):
+    blob_client = get_blob_client(container_name, blob_name)
+    return blob_client.download_blob().readall()
+
+
 def get_partition_key(artists):
-    artist = next(iter(artists or []))
+    artist = artists if type(artists) is str else next(iter(artists or []))
     artist = artist.replace('\\', '')
     artist = artist.replace('/', '')
     return artist
@@ -52,9 +66,9 @@ def create_lyric_table_operation(track_row):
     track_info = track_row[1]
     return ('upsert', {
         u'PartitionKey': get_partition_key(track_info['Artists']),
-        u'RowKey': track_info['SpotifyId'],
+        u'RowKey': track_info['SpotifyId'].replace('/', ''),
         u'Name': track_info['Name'],
-        u'Artists': ",".join(track_info['Artists']),
+        u'Artists': track_info['Artists'] if type(track_info['Artists']) is str else ",".join(track_info['Artists']),
         u'Lyrics': track_info['Lyrics']
     })
 
@@ -63,9 +77,10 @@ def create_lyric_table_operation(track_row):
 def store_lyrics(tracks):
     operations = pandas.DataFrame()
     operations['PartitionKey'] = list(map(get_partition_key, tracks['Artists']))
+    operations['RowKey'] = list(tracks['SpotifyId'].replace('/', ''),)
     operations['Operation'] = list(map(create_lyric_table_operation, tracks.iterrows()))
 
-    grouped = operations.groupby('PartitionKey').agg(list)
+    grouped = operations.groupby(['PartitionKey', 'RowKey']).agg(list)
 
     for _, group in grouped.iterrows():
         store_transaction(constants.LYRICS_TABLE_NAME, group['Operation'])

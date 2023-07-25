@@ -33,10 +33,10 @@ def process_stored_data_for_tokenization(sentiments, phrases):
     return joined
 
 
-def recommend():
-    # For recommendation: tokenize all data, find similarities matrix for other songs and put out top 10 songs
-    # ranked by similarity with the input song
-    # similarities = cosine_similarity(tfidf_matrix)
+# def recommend():
+# For recommendation: tokenize all data, find similarities matrix for other songs and put out top 10 songs
+# ranked by similarity with the input song
+# similarities = cosine_similarity(tfidf_matrix)
 
 
 # General flow of action:
@@ -57,4 +57,12 @@ if __name__ == '__main__':
     tfidf = TfidfVectorizer()
     tfidf_matrix = tfidf.fit_transform(stored_data['ForTokenization'])
 
-    # TODO: do recommendation for songs in database and see if result can be stored somehow
+    similarities = cosine_similarity(tfidf_matrix)
+    similarities_indexed = pd.DataFrame(similarities, columns=stored_data['RowKey'],
+                                        index=stored_data['RowKey']).reset_index()
+
+    #TODO: find top 10 similarities for all songs in the database and store them in the storage
+    test_song = "4RvWPyQ5RL0ao9LPZeSouE"
+    recommendations = pd.DataFrame(similarities_indexed.nlargest(11, test_song)['RowKey'])
+    recommendations = recommendations[recommendations['RowKey'] != test_song]
+

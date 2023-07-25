@@ -19,20 +19,22 @@ def process_lyrics_for_analysis(lyrics):
 # Remove duplicate songs (recognized by the same spotify guid)
 # Remove rows which have empty 'Lyrics' column
 # Prepare lyrics for analysis
-def prepare_lyrics_for_analysis(tracks):
+def prepare_scraped_lyrics_for_analysis(tracks):
     dataframe = pandas.DataFrame(map(Track.to_dict, tracks))
-    print(dataframe)
-
     dataframe.drop_duplicates(subset=['SpotifyId'], inplace=True)
-    print(dataframe)
-
     dataframe['Lyrics'].str.strip()
     dataframe.drop(dataframe[dataframe['Lyrics'] == ""].index, inplace=True)
-    print(dataframe)
-
     dataframe['Lyrics'] = list(map(process_lyrics_for_analysis, dataframe['Lyrics']))
+
     return dataframe
 
+
+def prepare_kaggle_lyrics_for_analysis(lyrics):
+    lyrics['Lyrics'].str.strip()
+    lyrics.drop(lyrics[lyrics['Lyrics'] == ""].index, inplace=True)
+    lyrics['Lyrics'] = list(map(process_lyrics_for_analysis, lyrics['Lyrics']))
+
+    return lyrics
 
 
 def get_max_score_sentiment(l):
