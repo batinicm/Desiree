@@ -22,7 +22,7 @@ def get_kaggle_data():
 
     complete_data = pandas.merge(artists_df, lyrics_df, left_on='Link', right_on='ALink')
     complete_data.drop(['ALink', 'Genres', 'Link', 'Popularity', 'Songs', 'language'], axis=1, inplace=True)
-    complete_data.columns = ['Artists', 'Lyrics', 'SpotifyId', 'Name']
+    complete_data.rename(columns = {'Artist': 'Artists', 'Lyric': 'Lyrics', 'SLink': 'SpotifyId', 'SName': 'Name' }, inplace = True)
 
     return complete_data
 
