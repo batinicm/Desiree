@@ -1,19 +1,15 @@
-# Analyze initial corpus of song lyrics to have for app startup
-# 1. Get song lyrics for current top 40, 80s, 90s, 00s and 10s classics
-# 2. Analyze song lyrics and assign sentiment to them
 from io import StringIO
-
 import pandas
 
 from Utils import storage_utils, analyzer_utils, lyric_fetch_utils
 from Model import constants
 
 
-# Get blob data and process it, so it fits storage schema
+# Kaggle data is stored in an Azure Storage Blob
+# Original data link: https://www.kaggle.com/datasets/neisse/scrapped-lyrics-from-6-genres?resource=download&select=lyrics-data.csv
+# The original data contained ~70k songs/lyrics, so we narrow the scope down by using only songs which have 'en' as language
+# Get data from blob, process it, so it fits destination Azure table schema
 def get_kaggle_data():
-    # Read data from Azure Blob - 2 csvs: artists and lyrics
-    # Use only 'en' songs
-    # Create data to go with the Lyrics table schema
     artist_data = storage_utils.get_from_blob('kaggle-lyrics', 'artists-data.csv')
     artists_df = pandas.read_csv(StringIO(artist_data.decode('utf-8')))
 
@@ -27,23 +23,20 @@ def get_kaggle_data():
     return complete_data
 
 
+# For the offline part of the application, we create the initial dataset by using 2 methods of data collection:
+#   1. Scraping Spotify and Genius lyrics
+#   2. Pre-compiled list of lyrics from Kaggle
 if __name__ == '__main__':
-    # storage_utils.delete_entities(LYRICS_TABLE_NAME)
-    # storage_utils.delete_entities(SENTIMENT_TABLE_NAME)
-    # storage_utils.delete_entities(PHRASES_TABLE_NAME)
-
-        # Prepare kaggle data
-    kaggle_data = get_kaggle_data()
-    analyzer_utils.prepare_kaggle_lyrics_for_analysis(kaggle_data)
-    storage_utils.store_lyrics(kaggle_data)
-
     if not storage_utils.check_storage_created(constants.LYRICS_TABLE_NAME):
-        # Prepare scraped material
         for playlist in constants.ALL_OUT_PLAYLIST_IDS:
             tracks = lyric_fetch_utils.get_tracks(playlist)
             lyrics = map(lyric_fetch_utils.get_lyrics, tracks[0:3])
             lyrics = analyzer_utils.prepare_scraped_lyrics_for_analysis(lyrics)
             storage_utils.store_lyrics(lyrics)
+
+        kaggle_data = get_kaggle_data()
+        analyzer_utils.prepare_kaggle_lyrics_for_analysis(kaggle_data)
+        storage_utils.store_lyrics(kaggle_data)
 
     lyrics = list(storage_utils.get_from_storage(constants.LYRICS_TABLE_NAME))
     sentiment_analyzed = list(analyzer_utils.analyze_text(lyrics))
