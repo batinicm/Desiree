@@ -30,7 +30,7 @@ if __name__ == '__main__':
     if not storage_utils.check_storage_created(constants.LYRICS_TABLE_NAME):
         for playlist in constants.ALL_OUT_PLAYLIST_IDS:
             tracks = lyric_fetch_utils.get_tracks(playlist)
-            lyrics = map(lyric_fetch_utils.get_lyrics, tracks[0:3])
+            lyrics = map(lyric_fetch_utils.get_lyrics, tracks)
             lyrics = analyzer_utils.prepare_scraped_lyrics_for_analysis(lyrics)
             storage_utils.store_lyrics(lyrics)
 
