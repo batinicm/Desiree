@@ -70,7 +70,6 @@ def recommend_in_existing(song_id):
 # put into queue/playlist/play next and display on webpage
 if __name__ == '__main__':
 
-    #TODO: find top 10 similarities for all songs in the database and store them in the storage
     test_song = "4RvWPyQ5RL0ao9LPZeSouE"
     recommendations = recommend_in_existing(test_song)
     print(recommendations)
