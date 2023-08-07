@@ -14,6 +14,11 @@ def extract_track_info(track):
                  artists=[artist['name'] for artist in track['track']['artists']])
 
 
+def extract_track_info_raw(track):
+    return Track(spotify_id=track['id'], name=track['name'],
+                 artists=[artist['name'] for artist in track['artists']])
+
+
 # Get playlist contents
 def get_tracks(playlist_id):
     print("Starting get_tracks:")
@@ -39,6 +44,30 @@ def get_tracks(playlist_id):
     print("Total song number: " + str(len(all_tracks)))
     print("get_tracks done.")
     return all_tracks
+
+
+def prepare_spotify_query(song_name):
+    return re.sub(" ", "%20", song_name)
+
+
+# Get Spotify track info about a track searching by song name
+def get_track(song_name, artist):
+    sp = spotipy.Spotify(client_credentials_manager=SpotifyClientCredentials())
+    tracks = []
+    offset = 0
+
+    while True:
+        response = sp.search(q="remaster%20track:" + prepare_spotify_query(song_name) + "%20artist:" + prepare_spotify_query(artist), offset=offset, type='track')
+        if len(response['tracks']['items']) == 0:
+            break
+
+        offset = offset + len(tracks)
+        tracks = tracks + response['tracks']['items']
+
+    tracks.sort(reverse=True, key=lambda t: t['popularity'])
+    items = list(map(extract_track_info_raw, tracks))
+    return next(iter(items), None)
+
 
 
 # Purge 'feat.' from song titles, since it impacts search results on Genius

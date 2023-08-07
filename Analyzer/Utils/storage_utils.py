@@ -123,3 +123,8 @@ def store_tokens(tokens_df):
             'Tokens': ",".join(row['Tokens'])
         }
         table_client.create_entity(entity)
+
+
+def get_from_table(table_name, rowkey):
+    table_client = get_table_client(table_name)
+    return table_client.query_entities(query_filter=f"RowKey eq '{rowkey}'")

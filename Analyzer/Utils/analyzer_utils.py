@@ -49,6 +49,7 @@ def get_max_score_sentiment(l):
 
 
 def analyze_text(lyrics):
+    print("Analyzing...")
     endpoint = vault_utils.get_secret("LanguageAnalyzerEndpoint")
     key = vault_utils.get_secret("LanguageAnalyzerKey")
     text_analytics_client = TextAnalyticsClient(endpoint, AzureKeyCredential(key))
@@ -63,10 +64,12 @@ def analyze_text(lyrics):
         else:
             sentiments.append(get_max_score_sentiment(lyric_result[0]))
 
+    print("Analyzing done.")
     return zip(lyrics, sentiments)
 
 
 def extract_key_phrases(lyrics):
+    print("Key phrases extracting...")
     endpoint = vault_utils.get_secret("LanguageAnalyzerEndpoint")
     key = vault_utils.get_secret("LanguageAnalyzerKey")
     text_analytics_client = TextAnalyticsClient(endpoint, AzureKeyCredential(key))
@@ -84,5 +87,6 @@ def extract_key_phrases(lyrics):
             else:
                 phrases.append([])
 
+    print("Key phrases extracted.")
     return zip(lyrics, phrases)
 
