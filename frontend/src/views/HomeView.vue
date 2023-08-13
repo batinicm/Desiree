@@ -4,9 +4,11 @@ import { useFastStore } from '../stores/fast'
 import { storeToRefs } from 'pinia'
 
 const useFast = useFastStore()
-const {msg} = storeToRefs(useFast)
+const {msg, songs} = storeToRefs(useFast)
 
 useFast.touchFast()
+useFast.getHomeSongs()
+
 </script>
 
 <template>
@@ -38,32 +40,14 @@ useFast.touchFast()
         </button>
 
         <div class="py-1.5"></div>
-
-        <div class="flex items-center">
-            <HomeCard image="https://picsum.photos/id/120/300/300" title="Title is here" subTitle="Subtitle is here" />
-            <HomeCard image="https://picsum.photos/id/110/300/300" title="Title is here" subTitle="Subtitle is here" />
-            <HomeCard class="md:block hidden" image="https://picsum.photos/id/221/300/300" title="Title is here" subTitle="Subtitle is here" />
-            <HomeCard class="lg:block hidden" image="https://picsum.photos/id/232/300/300" title="Title is here" subTitle="Subtitle is here" />
-            <HomeCard class="xl:block hidden" image="https://picsum.photos/id/187/300/300" title="Title is here" subTitle="Subtitle is here" />
-        </div>
-    </div>
-
-    <div class="p-8">
-        <button
-            type="button"
-            class="text-white text-2xl font-semibold hover:underline cursor-pointer"
-        >
-        Recommended songs
-        </button>
-
-        <div class="py-1.5"></div>
-
-        <div class="flex items-center">
-            <HomeCard image="https://picsum.photos/id/88/300/300" title="Title is here" subTitle="Subtitle is here" />
-            <HomeCard image="https://picsum.photos/id/243/300/300" title="Title is here" subTitle="Subtitle is here" />
-            <HomeCard class="md:block hidden" image="https://picsum.photos/id/123/300/300" title="Title is here" subTitle="Subtitle is here" />
-            <HomeCard class="lg:block hidden" image="https://picsum.photos/id/121/300/300" title="Title is here" subTitle="Subtitle is here" />
-            <HomeCard class="xl:block hidden" image="https://picsum.photos/id/99/300/300" title="Title is here" subTitle="Subtitle is here" />
+        
+        <div class="text-white">
+            <ul>
+                <li v-for="track in songs" :key="track">
+                    <HomeCard :image="track.ImageHref" :title="track.Name" :subTitle="track.Artist" />
+                    <div class="text-white"> Bla {{track.ImageHref}} -- {{track.Name}} -- {{track.Artist}} </div>
+                </li>
+            </ul>
         </div>
     </div>
 </template>

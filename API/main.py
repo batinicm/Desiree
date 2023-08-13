@@ -40,7 +40,7 @@ async def home_song_fetch():
     # Return array of 10 objects which contain song name, artist name, image href
     tracks = lyric_fetch_utils.get_playlist_items("37i9dQZF1DX4UtSsGT1Sbe")
     return_val = list(map(API.utils.extract_info_for_homeview, tracks))
-    return return_val
+    return return_val[0:10]
 
 
 # Get song id from spotify
