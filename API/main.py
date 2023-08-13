@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 import uvicorn
-import recommender
+from Analyzer import recommender
 from Analyzer.Utils import lyric_fetch_utils, storage_utils, analyzer_utils
 from Analyzer.Model import constants
 
@@ -11,6 +11,7 @@ app = FastAPI()
 origins = [
     "http://localhost",
     "http://localhost:8080",
+    "http://localhost:5173"
 ]
 
 app.add_middleware(

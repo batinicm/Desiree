@@ -5,7 +5,7 @@ from azure.ai.textanalytics import TextAnalyticsClient
 from azure.core.credentials import AzureKeyCredential
 
 from . import vault_utils
-from Model.track_class import Track
+from Analyzer.Model.track_class import Track
 
 
 # Preprocess lyrics to eliminate part of song annotations (verse, chorus, singer...)

@@ -13,8 +13,8 @@ import pandas as pd
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
-from Utils import storage_utils
-from Model import constants
+from Analyzer.Utils import storage_utils
+from Analyzer.Model import constants
 
 
 def process_stored_data_for_tokenization(sentiments, phrases):

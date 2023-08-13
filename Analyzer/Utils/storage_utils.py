@@ -4,7 +4,7 @@ import pandas
 from azure.data.tables import TableServiceClient
 from azure.storage.blob import BlobServiceClient
 
-from Model import constants
+from Analyzer.Model import constants
 from . import vault_utils
 
 

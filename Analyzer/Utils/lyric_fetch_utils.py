@@ -5,7 +5,7 @@ import spotipy
 from spotipy import SpotifyClientCredentials
 
 from . import vault_utils
-from Model.track_class import Track
+from Analyzer.Model.track_class import Track
 
 
 # Extract necessary information from the track information retrieved from Spotify

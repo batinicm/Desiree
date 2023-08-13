@@ -1,11 +1,22 @@
 import { createApp } from 'vue'
+import { createPinia } from 'pinia'
+import axios from 'axios'
+
 import App from './App.vue'
 import router from './router'
-import axios from 'axios'
-import 'bootstrap/dist/css/bootstrap.css'
 
+import './assets/main.css'
 
-axios.defaults.withCredentials = true;
-axios.defaults.baseURL = 'http://localhost:8000/';
+import piniaPluginPersistedstate from 'pinia-plugin-persistedstate'
 
-createApp(App).use(router).mount('#app')
+const pinia = createPinia()
+pinia.use(piniaPluginPersistedstate)
+
+const app = createApp(App)
+
+axios.defaults.baseURL = 'http://localhost:8080/'
+
+app.use(pinia)
+app.use(router)
+
+app.mount('#app')
