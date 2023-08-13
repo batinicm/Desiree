@@ -1,5 +1,12 @@
 <script setup>
-    import HomeCard from '../components/HomeCard.vue';
+import HomeCard from '../components/HomeCard.vue';
+import { useFastStore } from '../stores/fast'
+import { storeToRefs } from 'pinia'
+
+const useFast = useFastStore()
+const {msg} = storeToRefs(useFast)
+
+useFast.touchFast()
 </script>
 
 <template>
@@ -60,18 +67,4 @@
         </div>
     </div>
 </template>
-
-<script>
-import { defineComponent } from '@vue/composition-api'
-import { useFastStore } from './stores/fast'
-import { storeToRefs } from 'pinia'
-
-const useFast = useFastStore()
-const {msg} = storeToRefs(useFast)
-
-onMounted(() => {
-    useFast.touchFast()
-})
-
-</script>
 

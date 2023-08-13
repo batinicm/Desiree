@@ -14,7 +14,7 @@ pinia.use(piniaPluginPersistedstate)
 
 const app = createApp(App)
 
-axios.defaults.baseURL = 'http://localhost:8080/'
+axios.defaults.baseURL = 'http://127.0.0.1:8000'
 
 app.use(pinia)
 app.use(router)
