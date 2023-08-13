@@ -1,7 +1,7 @@
 from Analyzer import recommender
 from Analyzer.Utils import lyric_fetch_utils, storage_utils, analyzer_utils
 from Analyzer.Model import constants
-from Model.track_class import Track
+from Analyzer.Model.track_class import Track
 
 
 def extract_info_for_webapp(track):

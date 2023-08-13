@@ -12,7 +12,7 @@ useFast.getHomePlaylists()
 
 <template>
     <div class="p-8" v-for="playlist in playlists" :key="playlist">
-        <div class="text-white text-2xl font-semibold"> {{playlist.Title}} </div>
+        <div class="playlist-title"> {{playlist.Title}} </div>
         <div class="text-white text-l"> {{playlist.Description}} </div>
         <div class="grid-container">
             <div class="grid-item" v-for="track in playlist.Songs" :key="track">
@@ -31,5 +31,11 @@ useFast.getHomePlaylists()
 
 .grid-item {
   border-radius: 4px;
+}
+
+.playlist-title {
+  color: white;
+  font-size: 1.5em;
+  font-family: "Avenir Next Heavy" !important;
 }
 </style>

@@ -52,7 +52,7 @@
                       width="27"
                       src="https://w7.pngwing.com/pngs/505/761/png-transparent-login-computer-icons-avatar-icon-monochrome-black-silhouette.png"
                     >
-                    <div class="text-white text-[14px] ml-1.5 font-semibold">Login</div>
+                    <div class="text-white text-[14px] ml-1.5 font-semibold font">Login</div>
                     <ChevronDown v-if="!openMenu" @click="openMenu = true" fillColor="#FFFFFF" :size="25" />
                     <ChevronUp v-else @click="openMenu = false" fillColor="#FFFFFF" :size="25" />
                 </div>

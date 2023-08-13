@@ -6,6 +6,7 @@ import App from './App.vue'
 import router from './router'
 
 import './assets/main.css'
+import './assets/font.css'
 
 import piniaPluginPersistedstate from 'pinia-plugin-persistedstate'
 
