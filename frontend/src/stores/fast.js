@@ -3,18 +3,18 @@ import { defineStore } from "pinia";
 
 export const useFastStore = defineStore('fast', {
     state: () => ({
-        msg: '',
-        songs: null
+        songs: null,
+        playlists: null
     }),
     actions: {
-        async touchFast(){
-            let {data} = await axios.get('');
-            this.msg = data;
-        },
-
         async getHomeSongs(){
             let {data} = await axios.get('homesong')
             this.songs = data
+        },
+
+        async getHomePlaylists(){
+            let {data} = await axios.get('topplaylists')
+            this.playlists = data
         }
     },
     persist: true

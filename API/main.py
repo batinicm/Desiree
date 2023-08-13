@@ -43,6 +43,25 @@ async def home_song_fetch():
     return return_val[0:10]
 
 
+@app.get("/topplaylists")
+async def home_playlists_fetch():
+    playlists_info = []
+
+    for playlist_id in constants.ALL_OUT_PLAYLIST_IDS:
+        playlist_info = lyric_fetch_utils.get_playlist_info(playlist_id)
+        tracks = lyric_fetch_utils.get_playlist_items(playlist_id)
+        songs = list(map(API.utils.extract_info_for_homeview, tracks))
+
+        info = {
+            'Title': playlist_info['Title'],
+            'Description': playlist_info['Description'],
+            'Songs': songs[0:10]
+        }
+        playlists_info.append(info)
+
+    return playlists_info
+
+
 # Get song id from spotify
 # Check if song already in storage
 # If yes, find top 10 songs using already computed tokens

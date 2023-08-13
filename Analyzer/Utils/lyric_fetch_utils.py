@@ -26,6 +26,16 @@ def get_client_credentials():
     return SpotifyClientCredentials(client_id=spotipy_client_id, client_secret=spotipy_client_secret)
 
 
+def get_playlist_info(playlist_id):
+    sp = spotipy.Spotify(client_credentials_manager=get_client_credentials())
+    response = sp.playlist(playlist_id=playlist_id)
+
+    return {
+        'Title': response['name'],
+        'Description': response['description']
+    }
+
+
 def get_playlist_items(playlist_id):
     sp = spotipy.Spotify(client_credentials_manager=get_client_credentials())
     all_tracks = []
@@ -80,7 +90,6 @@ def get_track(song_name, artist):
     tracks.sort(reverse=True, key=lambda t: t['popularity'])
     items = list(map(extract_track_info_raw, tracks))
     return next(iter(items), None)
-
 
 
 # Purge 'feat.' from song titles, since it impacts search results on Genius
