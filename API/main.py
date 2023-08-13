@@ -41,6 +41,10 @@ async def home_playlists_fetch():
         tracks = lyric_fetch_utils.get_playlist_items(playlist_id)
         songs = list(map(API.utils.extract_info_for_webapp, tracks))
 
+        # TODO: remove this filter once you have all the offline analysis done
+        songs = songs[0:15]
+        songs = list(map(API.utils.add_recommendations_for_web, songs))
+        songs = list(filter(lambda s: len(s['Recommendations']) > 0, songs))
         info = {
             'Title': playlist_info['Title'],
             'Description': playlist_info['Description'],
@@ -51,39 +55,13 @@ async def home_playlists_fetch():
     return playlists_info
 
 
-# Get song id from spotify
-# Check if song already in storage
-# If yes, find top 10 songs using already computed tokens
-# If not, find artist from spotify search, use that to get genius lyrics and do the rest of the text processing to
-# get top 10 similar songs
-# Return an array of spotify ids for songs (be careful about the non-spotify songs in the corpus)
 @app.get("/song/{song_name}&{artist}")
 async def get_songs(song_name, artist):
     track = lyric_fetch_utils.get_track(song_name, artist)
-
     if track == "":
         return
 
-    table_query_result = list(storage_utils.get_from_table(constants.LYRICS_TABLE_NAME, rowkey=track.spotify_id))
-
-    # If the song doesn't exist among the saved songs, the entire process of getting lyrics, analyzing the sentiment,
-    # getting key phrases and tokenization needs to be done
-    # Additionally, storing this new information in each of the tables
-    # And finally, getting recommendations
-    if len(table_query_result) == 0:
-        lyrics = lyric_fetch_utils.get_lyrics(track)
-        lyrics = analyzer_utils.prepare_scraped_lyrics_for_analysis([lyrics])
-        storage_utils.store_lyrics(lyrics)
-
-        lyrics = list(storage_utils.get_from_table(constants.LYRICS_TABLE_NAME, rowkey=track.spotify_id))
-        sentiment_analyzed = list(analyzer_utils.analyze_text(lyrics))
-        storage_utils.store_sentiment(sentiment_analyzed)
-        phrases = list(analyzer_utils.extract_key_phrases(lyrics))
-        storage_utils.store_phrases(phrases)
-        print("Done adding.")
-
-    recommendations = recommender.recommend_in_existing(track.spotify_id)
-    return recommendations
+    return API.utils.get_recommendations(track)
 
 
 if __name__ == "__main__":

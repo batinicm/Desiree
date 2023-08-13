@@ -93,8 +93,9 @@ def get_track(song_name, artist):
 
 
 # Purge 'feat.' from song titles, since it impacts search results on Genius
-def purge_feat_from_title(title):
-    return re.sub(".feat.*", "", title)
+def clean_title(title):
+    ret = re.sub(".feat.*", "", title)
+    return re.sub(".Remastered.*", "", ret)
 
 
 # Get lyrics to songs using Genius API
@@ -105,7 +106,7 @@ def get_lyrics(track):
     genius = Genius(access_token=genius_token, sleep_time=1, retries=5)
     artist = genius.search_artist(next(iter(track.artists or [])), max_songs=0)
 
-    song_title = purge_feat_from_title(track.name)
+    song_title = clean_title(track.name)
     song = genius.search_song(song_title, artist.name)
 
     if song is None:

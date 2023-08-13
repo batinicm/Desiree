@@ -51,7 +51,8 @@ def recommend_in_existing(song_id):
     similarities_indexed = prepare_similarities()
 
     recommendations = pd.DataFrame(similarities_indexed.nlargest(11, song_id)['RowKey'])
-    return recommendations[recommendations['RowKey'] != song_id]
+    recommendations = recommendations[recommendations['RowKey'] != song_id]
+    return list(recommendations['RowKey'])
 
 # def recommend():
 # For recommendation: tokenize all data, find similarities matrix for other songs and put out top 10 songs
