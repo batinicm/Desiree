@@ -50,9 +50,9 @@
                     <img 
                       class="rounded-full" 
                       width="27"
-                      src="https://yt3.ggpht.com/e9o-24_frmNSSVvjS47rT8qCHgsHNiedqgXbzmrmpsj6H1ketcufR1B9vLXTZRa30krRksPj=s88-c-k-c0x00ffffff-no-rj-mo"
+                      src="https://w7.pngwing.com/pngs/505/761/png-transparent-login-computer-icons-avatar-icon-monochrome-black-silhouette.png"
                     >
-                    <div class="text-white text-[14px] ml-1.5 font-semibold">John Weeks Dev</div>
+                    <div class="text-white text-[14px] ml-1.5 font-semibold">Login</div>
                     <ChevronDown v-if="!openMenu" @click="openMenu = true" fillColor="#FFFFFF" :size="25" />
                     <ChevronUp v-else @click="openMenu = false" fillColor="#FFFFFF" :size="25" />
                 </div>
@@ -70,7 +70,7 @@
 
         <div id="SideNav" class="h-[100%] p-6 w-[240px] fixed z-50 bg-black">
             <RouterLink to="/">
-              <img width="125" src="/images/icons/spotify-logo.png">
+              <img width="200" src="d_black.png">
             </RouterLink>
             <div class="my-8"></div>
             <ul>
@@ -88,12 +88,6 @@
                 <MenuItem class="-ml-[1px]" :iconSize="27" name="Liked Songs" iconString="liked" pageUrl="/liked" />
             </ul>
             <div class="border-b border-b-gray-700"></div>
-            <ul>
-                <li class="font-semibold text-[13px] mt-3 text-gray-300 hover:text-white">My Playlist #1</li>
-                <li class="font-semibold text-[13px] mt-3 text-gray-300 hover:text-white">My Playlist #2</li>
-                <li class="font-semibold text-[13px] mt-3 text-gray-300 hover:text-white">My Playlist #3</li>
-                <li class="font-semibold text-[13px] mt-3 text-gray-300 hover:text-white">My Playlist #4</li>
-            </ul>
         </div>
     </div>
 
