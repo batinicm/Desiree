@@ -40,15 +40,23 @@ useFast.getHomeSongs()
         </button>
 
         <div class="py-1.5"></div>
-        
-        <div class="text-white">
-            <ul>
-                <li v-for="track in songs" :key="track">
-                    <HomeCard :image="track.ImageHref" :title="track.Name" :subTitle="track.Artist" />
-                    <div class="text-white"> Bla {{track.ImageHref}} -- {{track.Name}} -- {{track.Artist}} </div>
-                </li>
-            </ul>
+
+        <div class="grid-container">
+            <div class="grid-item" v-for="track in songs" :key="track">
+                <HomeCard :image="track.ImageHref" :title="track.Name" :subTitle="track.Artist" />
+            </div>
         </div>
     </div>
 </template>
 
+<style>
+.grid-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.grid-item {
+  border-radius: 4px;
+}
+</style>
