@@ -19,11 +19,15 @@ def extract_track_info_raw(track):
                  artists=[artist['name'] for artist in track['artists']])
 
 
-# Get playlist contents
-def get_tracks(playlist_id):
-    print("Starting get_tracks:")
+def get_client_credentials():
+    spotipy_client_id = vault_utils.get_secret("SpotifyClientId")
+    spotipy_client_secret = vault_utils.get_secret("SpotifyClientSecret")
 
-    sp = spotipy.Spotify(client_credentials_manager=SpotifyClientCredentials())
+    return SpotifyClientCredentials(client_id=spotipy_client_id, client_secret=spotipy_client_secret)
+
+
+def get_playlist_items(playlist_id):
+    sp = spotipy.Spotify(client_credentials_manager=get_client_credentials())
     all_tracks = []
 
     pl_id = 'spotify:playlist:' + playlist_id
@@ -36,10 +40,19 @@ def get_tracks(playlist_id):
         if len(response['items']) == 0:
             break
 
-        items = list(map(extract_track_info, response['items']))
-        print(items)
+        items = response['items']
         offset = offset + len(items)
         all_tracks = all_tracks + items
+
+    return  all_tracks
+
+
+# Get playlist contents
+def get_tracks(playlist_id):
+    print("Starting get_tracks:")
+
+    all_tracks = get_playlist_items(playlist_id)
+    all_tracks = list(map(extract_track_info, all_tracks))
 
     print("Total song number: " + str(len(all_tracks)))
     print("get_tracks done.")
@@ -52,7 +65,7 @@ def prepare_spotify_query(song_name):
 
 # Get Spotify track info about a track searching by song name
 def get_track(song_name, artist):
-    sp = spotipy.Spotify(client_credentials_manager=SpotifyClientCredentials())
+    sp = spotipy.Spotify(client_credentials_manager=get_client_credentials())
     tracks = []
     offset = 0
 
