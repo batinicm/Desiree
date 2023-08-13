@@ -32,17 +32,6 @@ async def home():
     return "Hello, World!"
 
 
-# Fetch songs to show on the home view
-# Take top 10 songs from Top X - 37i9dQZF1DX4UtSsGT1Sbe
-@app.get("/homesong")
-async def home_song_fetch():
-    # Get tracks from playlist by playlist id
-    # Return array of 10 objects which contain song name, artist name, image href
-    tracks = lyric_fetch_utils.get_playlist_items("37i9dQZF1DX4UtSsGT1Sbe")
-    return_val = list(map(API.utils.extract_info_for_homeview, tracks))
-    return return_val[0:10]
-
-
 @app.get("/topplaylists")
 async def home_playlists_fetch():
     playlists_info = []
@@ -50,7 +39,7 @@ async def home_playlists_fetch():
     for playlist_id in constants.ALL_OUT_PLAYLIST_IDS:
         playlist_info = lyric_fetch_utils.get_playlist_info(playlist_id)
         tracks = lyric_fetch_utils.get_playlist_items(playlist_id)
-        songs = list(map(API.utils.extract_info_for_homeview, tracks))
+        songs = list(map(API.utils.extract_info_for_webapp, tracks))
 
         info = {
             'Title': playlist_info['Title'],

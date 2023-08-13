@@ -2,20 +2,20 @@
 import { toRefs } from 'vue'
 import { RouterLink } from 'vue-router';
 
+import { useSongStore } from '../stores/song'
+import { storeToRefs } from 'pinia';
+const useSong = useSongStore()
+
 const props = defineProps({
-    image: String,
-    title: String,
-    subTitle: String
+    track: Object
 })
-const { image, title, subTitle } = toRefs(props)
+const { track } = toRefs(props)
 </script>
 
 <template>
-    <RouterLink to="library">
-        <div class="bg-[#111111] p-4 rounded-md m-2 hover:bg-[#252525] cursor-pointer">
-            <img class="rounded-md" width="300" height="300" :src="image" alt="">
-            <div class="text-white pt-4 font-semibold text-[17px]">{{ title }}</div>
-            <div class="text-gray-400 pt-1 pb-3 text-[14px]">{{ subTitle }}</div>
+        <div @click="useSong.loadSong(track)" class="bg-[#111111] p-4 rounded-md m-2 hover:bg-[#252525] cursor-pointer">
+            <img class="rounded-md" width="300" height="300" :src="track.ImageHref" alt="">
+            <div class="text-white pt-4 font-semibold text-[17px]">{{ track.Name }}</div>
+            <div class="text-gray-400 pt-1 pb-3 text-[14px]">{{ track.Artist }}</div>
         </div>
-    </RouterLink>
 </template>

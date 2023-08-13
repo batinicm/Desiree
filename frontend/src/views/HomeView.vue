@@ -4,9 +4,8 @@ import { useFastStore } from '../stores/fast'
 import { storeToRefs } from 'pinia'
 
 const useFast = useFastStore()
-const {songs, playlists} = storeToRefs(useFast)
+const {playlists} = storeToRefs(useFast)
 
-useFast.getHomeSongs()
 useFast.getHomePlaylists()
 
 </script>
@@ -17,7 +16,7 @@ useFast.getHomePlaylists()
         <div class="text-white text-l"> {{playlist.Description}} </div>
         <div class="grid-container">
             <div class="grid-item" v-for="track in playlist.Songs" :key="track">
-                <HomeCard :image="track.ImageHref" :title="track.Name" :subTitle="track.Artist" />
+                <HomeCard :track="track" />
             </div>
         </div>
     </div>

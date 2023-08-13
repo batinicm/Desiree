@@ -1,5 +1,4 @@
 import { defineStore } from 'pinia'
-import artist from '../artist.json'
 
 export const useSongStore = defineStore('song', {
   state: () => ({
@@ -9,8 +8,8 @@ export const useSongStore = defineStore('song', {
     currentTrack: null
   }),
   actions: {
-    loadSong(artist, track) {
-        this.currentArtist = artist
+    loadSong(track) {
+        this.currentArtist = track.Artist
         this.currentTrack = track
 
         if (this.audio && this.audio.src) {
@@ -19,8 +18,7 @@ export const useSongStore = defineStore('song', {
             this.audio.src = ''
         }
 
-        this.audio = new Audio()
-        this.audio.src = track.path
+        this.audio = new Audio(track.Url)
 
         setTimeout(() => {
             this.isPlaying = true
@@ -38,9 +36,9 @@ export const useSongStore = defineStore('song', {
         }
     },
 
-    playOrPauseThisSong(artist, track) {
-        if (!this.audio || !this.audio.src || (this.currentTrack.id !== track.id)) {
-            this.loadSong(artist, track)
+    playOrPauseThisSong(track) {
+        if (!this.audio || !this.audio.src || (this.currentTrack.Name !== track.Name)) {
+            this.loadSong(track)
             return
         }
 
@@ -48,24 +46,26 @@ export const useSongStore = defineStore('song', {
     },
 
     prevSong(currentTrack) {
-        let track = artist.tracks[currentTrack.id - 2]
-        this.loadSong(artist, track)
+        this.loadSong(currentTrack)
     },
 
     nextSong(currentTrack) {
-        if (currentTrack.id === artist.tracks.length) {
+        /**if (currentTrack.id === artist.tracks.length) {
             let track = artist.tracks[0]
             this.loadSong(artist, track)
         } else {
             let track = artist.tracks[currentTrack.id]
             this.loadSong(artist, track)
         }
+        **/
     },
 
     playFromFirst() {
+        /**
         this.resetState()
         let track = artist.tracks[0]
         this.loadSong(artist, track)
+         */
     },
 
     resetState() {
