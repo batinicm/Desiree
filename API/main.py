@@ -5,6 +5,7 @@ import uvicorn
 from Analyzer import recommender
 from Analyzer.Utils import lyric_fetch_utils, storage_utils, analyzer_utils
 from Analyzer.Model import constants
+import random
 
 import API.utils
 
@@ -41,8 +42,12 @@ async def home_playlists_fetch():
         tracks = lyric_fetch_utils.get_playlist_items(playlist_id)
         songs = list(map(API.utils.extract_info_for_webapp, tracks))
 
-        # TODO: remove this filter once you have all the offline analysis done
-        songs = songs[0:15]
+        songs = list(filter(lambda s: s['Url'] is not None, songs))
+
+        #TODO: remove
+        num = random.choice([0, len(songs) - 15])
+        songs = songs[num:num+15]
+
         songs = list(map(API.utils.add_recommendations_for_web, songs))
         songs = list(filter(lambda s: len(s['Recommendations']) > 0, songs))
         info = {
