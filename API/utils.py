@@ -50,3 +50,18 @@ def add_recommendations_for_web(song):
 
     song['Recommendations'] = recommendations
     return song
+
+
+# Get song ImageHref, Name, Artist, Url, SpotifyId
+def get_song_info(recommendation_id):
+    raw_data = lyric_fetch_utils.get_track_by_id(recommendation_id)
+    extracted_track = raw_data['track']
+    image_href = [image['url'] for image in extracted_track['album']['images']][0]
+    artist = [artist['name'] for artist in extracted_track['artists']][0]
+    return {
+        'ImageHref': image_href,
+        'Name': extracted_track['name'],
+        'Artist': artist,
+        'Url': extracted_track['preview_url'],
+        'SpotifyId': extracted_track['id']
+    }

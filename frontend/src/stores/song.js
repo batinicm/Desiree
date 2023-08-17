@@ -5,9 +5,15 @@ export const useSongStore = defineStore('song', {
     isPlaying: false,
     audio: null,
     currentArtist: null,
-    currentTrack: null
+    currentTrack: null,
+    masterTrack: null
   }),
   actions: {
+    loadMasterSong(track){
+        this.masterTrack = track
+        this.loadSong(track)
+    },
+
     loadSong(track) {
         this.currentArtist = track.Artist
         this.currentTrack = track
@@ -24,6 +30,11 @@ export const useSongStore = defineStore('song', {
             this.isPlaying = true
             this.audio.play()
         }, 200)
+    },
+
+    async loadRecommendationInfo(masterTrack){
+        let {data} = await axios.post('expandrecommendations', masterTrack.Recommended)
+        masterTrack.Recommended = data
     },
 
     playOrPauseSong() {
@@ -45,27 +56,39 @@ export const useSongStore = defineStore('song', {
         this.playOrPauseSong()
     },
 
-    prevSong(currentTrack) {
+    prevSong() {
+        if(this.masterTrack === null){
+            return
+        }
+
+        index = this.masterTrack.Recommended.indexOf(this.currentTrack)
+        if(index == 0){
+            index = this.masterTrack.Recommended.length
+        }
+        this.currentTrack = this.masterTrack.Recommended[index - 1]
+
         this.loadSong(currentTrack)
     },
 
-    nextSong(currentTrack) {
-        /**if (currentTrack.id === artist.tracks.length) {
-            let track = artist.tracks[0]
-            this.loadSong(artist, track)
-        } else {
-            let track = artist.tracks[currentTrack.id]
-            this.loadSong(artist, track)
+    nextSong() {
+        if(this.masterTrack === null){
+            return
         }
-        **/
+
+        index = this.masterTrack.Recommended.indexOf(this.currentTrack)
+        if(index == (this.masterTrack.Recommended.length - 1)){
+            this.masterTrack = this.masterTrack.Recommended[index]
+            this.loadRecommendationInfo(this.masterTrack)
+            index = -1
+        }
+        this.currentTrack = this.masterTrack.Recommended[index + 1]
+
+        this.loadSong(currentTrack)
     },
 
     playFromFirst() {
-        /**
         this.resetState()
-        let track = artist.tracks[0]
-        this.loadSong(artist, track)
-         */
+        this.loadSong(this.masterTrack)
     },
 
     resetState() {
@@ -73,6 +96,7 @@ export const useSongStore = defineStore('song', {
         this.audio = null
         this.currentArtist = null
         this.currentTrack = null
+        this.masterTrack = null
     }
   },
   persist: true

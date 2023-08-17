@@ -14,7 +14,7 @@ const { track } = toRefs(props)
 
 <template>
     <RouterLink to="library">
-        <div @click="useSong.loadSong(track)" class="bg-[#111111] p-4 rounded-md m-2 hover:bg-[#252525] cursor-pointer">
+        <div @click="useSong.loadMasterSong(track)" class="bg-[#111111] p-4 rounded-md m-2 hover:bg-[#252525] cursor-pointer">
             <img class="rounded-md" width="300" height="300" :src="track.ImageHref" alt="">
             <div class="text-white pt-4 font-semibold text-[17px]">{{ track.Name }}</div>
             <div class="text-gray-400 pt-1 pb-3 text-[14px]">{{ track.Artist }}</div>

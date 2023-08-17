@@ -14,14 +14,13 @@ let isTrackTime = ref(null)
 
 const props = defineProps({
     track: Object,
-    artist: Object,
     index: Number,
 })
 
-const { track, artist, index } = toRefs(props)
+const { track, index } = toRefs(props)
 
 onMounted(() => {
-    const audio = new Audio(track.value.path);
+    const audio = new Audio(track.value.Url);
     audio.addEventListener('loadedmetadata', function() {
         const duration = audio.duration;
         const minutes = Math.floor(duration / 60);
@@ -43,30 +42,30 @@ onMounted(() => {
                     v-if="!isPlaying"
                     fillColor="#FFFFFF"
                     :size="25"
-                    @click="useSong.playOrPauseThisSong(artist, track)"
+                    @click="useSong.playOrPauseThisSong(track)"
                 />
                 <Play
-                    v-else-if="isPlaying && currentTrack.name !== track.name"
+                    v-else-if="isPlaying && currentTrack.Name !== track.Name"
                     fillColor="#FFFFFF"
                     :size="25"
-                    @click="useSong.loadSong(artist, track)"
+                    @click="useSong.loadSong(track)"
                 />
 
                 <Pause v-else fillColor="#FFFFFF" :size="25" @click="useSong.playOrPauseSong()"/>
             </div>
             <div v-else class="text-white font-semibold w-[40px] ml-5">
-                <span :class="{'text-green-500': currentTrack && currentTrack.name === track.name}">
+                <span :class="{'text-green-500': currentTrack && currentTrack.Name === track.Name}">
                     {{ index }}
                 </span>
             </div>
             <div>
                 <div
-                    :class="{'text-green-500': currentTrack && currentTrack.name === track.name}"
+                    :class="{'text-green-500': currentTrack && currentTrack.Name === track.Name}"
                     class="text-white font-semibold"
                 >
-                    {{ track.name }}
+                    {{ track.Name }}
                 </div>
-                <div class="text-sm font-semibold text-gray-400">{{ artist.name }}</div>
+                <div class="text-sm font-semibold text-gray-400">{{ track.Artist }}</div>
             </div>
         </div>
         <div class="flex items-center">

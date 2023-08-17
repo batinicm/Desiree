@@ -73,6 +73,14 @@ def prepare_spotify_query(song_name):
     return re.sub(" ", "%20", song_name)
 
 
+def get_track_by_id(song_id):
+    sp = spotipy.Spotify(client_credentials_manager=get_client_credentials())
+    response = sp.track(track_id=song_id)
+
+    return response
+
+
+
 # Get Spotify track info about a track searching by song name
 def get_track(song_name, artist):
     sp = spotipy.Spotify(client_credentials_manager=get_client_credentials())

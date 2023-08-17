@@ -6,6 +6,8 @@ from Analyzer import recommender
 from Analyzer.Utils import lyric_fetch_utils, storage_utils, analyzer_utils
 from Analyzer.Model import constants
 import random
+from pydantic import BaseModel
+from typing import List
 
 import API.utils
 
@@ -45,8 +47,10 @@ async def home_playlists_fetch():
         songs = list(filter(lambda s: s['Url'] is not None, songs))
 
         #TODO: remove
-        num = random.choice([0, len(songs) - 15])
-        songs = songs[num:num+15]
+        #num = random.choice([0, len(songs) - 15])
+        #songs = songs[num:num+15]
+
+        songs = songs[0:10]
 
         songs = list(map(API.utils.add_recommendations_for_web, songs))
         songs = list(filter(lambda s: len(s['Recommendations']) > 0, songs))
@@ -58,6 +62,21 @@ async def home_playlists_fetch():
         playlists_info.append(info)
 
     return playlists_info
+
+
+class RecommendationId(BaseModel):
+    id: str
+
+
+# Expand recommendations for a song by searching for full information
+# Except the recommendations for the songs
+@app.post('expandrecommendations')
+async def expand_recommendations(recommendations: List[RecommendationId]):
+    full_info = []
+    for recommendation_id in recommendations:
+        full_info = full_info + API.utils.get_song_info(recommendation_id)
+
+    return full_info
 
 
 @app.get("/song/{song_name}&{artist}")

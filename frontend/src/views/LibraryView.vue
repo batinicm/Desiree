@@ -5,12 +5,13 @@ import Pause from 'vue-material-design-icons/Pause.vue';
 import DotsHorizontal from 'vue-material-design-icons/DotsHorizontal.vue';
 import Heart from 'vue-material-design-icons/Heart.vue';
 import ClockTimeThreeOutline from 'vue-material-design-icons/ClockTimeThreeOutline.vue';
-import artist from '../artist.json'
 
 import { useSongStore } from '../stores/song'
 import { storeToRefs } from 'pinia';
 const useSong = useSongStore()
-const { isPlaying, currentTrack, currentArtist } = storeToRefs(useSong)
+const { masterTrack, isPlaying, currentTrack, currentArtist } = storeToRefs(useSong)
+
+useSong.loadRecommendationInfo(masterTrack)
 
 const playFunc = () => {
     if (currentTrack.value) {
@@ -27,12 +28,12 @@ const playFunc = () => {
             type="button"
             class="text-white text-2xl font-semibold hover:underline cursor-pointer"
         >
-            {{ artist.name }}
+            {{ masterTrack.Artist }}
         </button>
 
         <div class="py-1.5"></div>
         <div class="flex items-center w-full relative h-full">
-            <img width="140" :src="artist.albumCover">
+            <img width="140" :src="masterTrack.ImageHref">
 
             <div class="w-full ml-5">
 
@@ -40,18 +41,18 @@ const playFunc = () => {
                     style="font-size: 33px;"
                     class="text-white absolute w-full hover:underline cursor-pointer top-0 font-bosemiboldld"
                 >
-                    {{ artist.name }}
+                    {{ masterTrack.Name }}
                 </div>
 
                 <div class="text-gray-300 text-[13px] flex">
                     <div class="flex">Album</div>
                     <div class="ml-2 flex">
                         <div class="circle mt-2 mr-2" />
-                        <span class="-ml-0.5">{{ artist.releaseYear }}</span>
+                        <span class="-ml-0.5"></span>
                     </div>
                     <div class="ml-2 flex">
                         <div class="circle mt-2 mr-2" />
-                        <span class="-ml-0.5">{{ artist.tracks.length }} songs</span>
+                        <span class="-ml-0.5"> songs</span>
                     </div>
                 </div>
 
@@ -80,8 +81,8 @@ const playFunc = () => {
         </div>
         <div class="border-b border-b-[#2A2A2A] mt-2"></div>
         <div class="mb-4"></div>
-        <ul class="w-full" v-for="track, index in artist.tracks" :key="track">
-            <SongRow :artist="artist" :track="track" :index="++index"/>
+        <ul class="w-full" v-for="track, index in masterTrack.Recommended" :key="track">
+            <SongRow :artist="masterTrack.Artist" :track="track" :index="++index"/>
         </ul>
     </div>
 </template>
