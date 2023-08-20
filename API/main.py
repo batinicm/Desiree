@@ -46,16 +46,22 @@ async def home_playlists_fetch():
 
         songs = list(filter(lambda s: s['Url'] is not None, songs))
 
-        num = random.choice([0, len(songs) - 15])
-        songs = songs[num:num+15]
+        #num = random.choice([0, len(songs) - 15])
+        #songs = songs[num:num+15]
+
+        songs = songs[0:40]
 
         songs = list(map(API.utils.add_recommendations_for_web, songs))
-        songs = list(filter(lambda s: len(s['Recommendations']) > 0, songs))
+        songs = list(filter(lambda s: s['Recommendations'] is not None and len(s['Recommendations']) > 0, songs))
         info = {
             'Title': playlist_info['Title'],
             'Description': playlist_info['Description'],
-            'Songs': songs[0:10]
+            'Songs': songs[0:8]
         }
+
+        for song in info['Songs']:
+            API.utils.expand_recommendation_info(song)
+
         playlists_info.append(info)
 
     return playlists_info
@@ -71,18 +77,13 @@ class RecommendationId(BaseModel):
 async def expand_recommendations(recommendations: List[RecommendationId]):
     full_info = []
     for recommendation_id in recommendations:
-        full_info = full_info + API.utils.get_song_info(recommendation_id)
+        info = API.utils.get_song_info(recommendation_id)
+        if info is None:
+            continue
+
+        full_info = full_info + info
 
     return full_info
-
-
-@app.get("/song/{song_name}&{artist}")
-async def get_songs(song_name, artist):
-    track = lyric_fetch_utils.get_track(song_name, artist)
-    if track == "":
-        return
-
-    return API.utils.get_recommendations(track)
 
 
 if __name__ == "__main__":

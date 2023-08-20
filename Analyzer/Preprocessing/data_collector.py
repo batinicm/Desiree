@@ -39,7 +39,8 @@ if __name__ == '__main__':
             tracks = lyric_fetch_utils.get_tracks(playlist)[0:10]
             lyrics = map(lyric_fetch_utils.get_lyrics, tracks)
             lyrics = analyzer_utils.prepare_scraped_lyrics_for_analysis(lyrics)
-            storage_utils.store_lyrics(lyrics)
+            if not storage_utils.store_lyrics(lyrics):
+                continue
 
             analyze(lyrics)
 

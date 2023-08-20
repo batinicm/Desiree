@@ -2,9 +2,11 @@ import re
 
 from lyricsgenius import Genius
 import spotipy
-from spotipy import SpotifyClientCredentials
+from spotipy import SpotifyClientCredentials, SpotifyException
 
 from . import vault_utils
+from . import storage_utils
+from Analyzer.Model import constants
 from Analyzer.Model.track_class import Track
 
 
@@ -75,9 +77,24 @@ def prepare_spotify_query(song_name):
 
 def get_track_by_id(song_id):
     sp = spotipy.Spotify(client_credentials_manager=get_client_credentials())
-    response = sp.track(track_id=song_id)
 
-    return response
+    try:
+        response = sp.track(track_id=song_id)
+        return response
+    except SpotifyException as s:
+        print(f'Song id {song_id}, not a spotify entity, trying to find it...' + str(s))
+
+    info = list(storage_utils.get_from_table(constants.LYRICS_TABLE_NAME, rowkey=song_id))
+
+    if len(info) == 0:
+        return None
+
+    song_info = info[0]
+    full_info = get_track(song_name=song_info['Name'], artist=song_info['Artists'])
+
+    storage_utils.update_row_key(old_key=song_id, new_key=full_info['id'])
+
+    return full_info
 
 
 # Get Spotify track info about a track searching by song name
@@ -95,7 +112,8 @@ def get_track(song_name, artist):
         tracks = tracks + response['tracks']['items']
 
     tracks.sort(reverse=True, key=lambda t: t['popularity'])
-    items = list(map(extract_track_info_raw, tracks))
+    #items = list(map(extract_track_info_raw, tracks))
+    items = tracks
     return next(iter(items), None)
 
 

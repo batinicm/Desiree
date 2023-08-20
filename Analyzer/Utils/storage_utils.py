@@ -1,6 +1,7 @@
 import collections.abc
 
 import pandas
+from azure.core.exceptions import ResourceExistsError
 from azure.data.tables import TableServiceClient, TableTransactionError
 from azure.storage.blob import BlobServiceClient
 
@@ -24,6 +25,17 @@ def check_storage_created(table_name):
     table_client = get_table_client(table_name)
     entities = table_client.query_entities(query_filter="PartitionKey ne ''", results_per_page=1)
     return len(list(entities)) != 0
+
+
+def delete_entity(table_name, partition_key, row_key):
+    table_client = get_table_client(table_name)
+    table_client.delete_entity(row_key=row_key, partition_key=partition_key)
+
+
+def delete_entity_from_all_tables(partition_key, row_key):
+    delete_entity(constants.LYRICS_TABLE_NAME, partition_key, row_key)
+    delete_entity(constants.SENTIMENT_TABLE_NAME, partition_key, row_key)
+    delete_entity(constants.PHRASES_TABLE_NAME, partition_key, row_key)
 
 
 def delete_entities(table_name):
@@ -91,6 +103,9 @@ def store_lyrics(tracks):
             store_transaction(constants.LYRICS_TABLE_NAME, group['Operation'])
         except TableTransactionError as t:
             print("Store error occurred, song not stored." + str(t))
+            return False
+
+    return True
 
 
 def store_sentiment(sentiments):
@@ -103,7 +118,13 @@ def store_sentiment(sentiments):
             'Name': lyrics['Name'],
             'Sentiment': lyrics['Sentiment']
         }
-        table_client.create_entity(entity)
+        try:
+            table_client.create_entity(entity)
+        except ResourceExistsError as t:
+            print("Store error occurred, song not stored." + str(t))
+            return False
+
+    return True
 
 
 def store_phrases(phrases):
@@ -116,7 +137,13 @@ def store_phrases(phrases):
             'Name': lyrics['Name'],
             'Phrases': ",".join(lyrics['Phrases'])
         }
-        table_client.create_entity(entity)
+        try:
+            table_client.create_entity(entity)
+        except ResourceExistsError as t:
+            print("Store error occurred, song not stored." + str(t))
+            return False
+
+    return True
 
 
 def store_tokens(tokens_df):
@@ -135,3 +162,19 @@ def store_tokens(tokens_df):
 def get_from_table(table_name, rowkey):
     table_client = get_table_client(table_name)
     return table_client.query_entities(query_filter=f"RowKey eq '{rowkey}'")
+
+
+def update_row_key(old_key, new_key):
+    tables = [constants.LYRICS_TABLE_NAME, constants.SENTIMENT_TABLE_NAME, constants.PHRASES_TABLE_NAME]
+
+    for table_name in tables:
+        entity = list(get_from_table(table_name, old_key))[0]
+
+        new_entity = {
+            'PartitionKey': entity['PartitionKey'],
+            'RowKey': new_key
+        }
+        new_entity.update(entity)
+        table_client = get_table_client(table_name)
+        table_client.upsert_entity(entity=new_entity)
+        table_client.delete_entity(partition_key=entity['PartitionKey'], row_key=old_key)

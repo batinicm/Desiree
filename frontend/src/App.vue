@@ -16,6 +16,13 @@
   onMounted(() => { isPlaying.value = false })
 
   let openMenu = ref(false)
+
+  const goBack = () => {
+      $router.go(-1)
+    }
+    const goForward = () => {
+      $router.go(1)
+    }
 </script>
 
 <template>
@@ -36,10 +43,10 @@
           "
         >
             <div class="flex items-center ml-6">
-                <button type="button" class="rounded-full bg-black p-[1px] cursor-pointer">
+                <button @click="goBack" type="button" class="rounded-full bg-black p-[1px] cursor-pointer">
                     <ChevronLeft fillColor="#FFFFFF" :size="30" />
                 </button>
-                <button type="button" class="rounded-full bg-black p-[1px] hover:bg-[#] ml-4 cursor-pointer">
+                <button @click="goForward" type="button" class="rounded-full bg-black p-[1px] hover:bg-[#] ml-4 cursor-pointer">
                     <ChevronRight fillColor="#FFFFFF" :size="30" />
                 </button>
             </div>
