@@ -46,11 +46,8 @@ async def home_playlists_fetch():
 
         songs = list(filter(lambda s: s['Url'] is not None, songs))
 
-        #TODO: remove
-        #num = random.choice([0, len(songs) - 15])
-        #songs = songs[num:num+15]
-
-        songs = songs[0:10]
+        num = random.choice([0, len(songs) - 15])
+        songs = songs[num:num+15]
 
         songs = list(map(API.utils.add_recommendations_for_web, songs))
         songs = list(filter(lambda s: len(s['Recommendations']) > 0, songs))

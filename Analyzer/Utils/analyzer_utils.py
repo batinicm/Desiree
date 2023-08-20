@@ -55,7 +55,7 @@ def analyze_text(lyrics):
     text_analytics_client = TextAnalyticsClient(endpoint, AzureKeyCredential(key))
 
     sentiments = list()
-    for entity in lyrics:
+    for _, entity in lyrics.iterrows():
         result = text_analytics_client.analyze_sentiment([entity["Lyrics"]], show_opinion_mining=True)
         lyric_result = [l for l in result if not l.is_error]
 
@@ -63,9 +63,10 @@ def analyze_text(lyrics):
             sentiments.append("neutral")
         else:
             sentiments.append(get_max_score_sentiment(lyric_result[0]))
+    lyrics['Sentiment'] = sentiments
 
     print("Analyzing done.")
-    return zip(lyrics, sentiments)
+    return lyrics
 
 
 def extract_key_phrases(lyrics):
@@ -75,7 +76,7 @@ def extract_key_phrases(lyrics):
     text_analytics_client = TextAnalyticsClient(endpoint, AzureKeyCredential(key))
 
     phrases = list()
-    for entity in lyrics:
+    for _, entity in lyrics.iterrows():
         result = text_analytics_client.extract_key_phrases([entity["Lyrics"]])
 
         if len(result) == 0:
@@ -86,7 +87,8 @@ def extract_key_phrases(lyrics):
                 phrases.append(result[0].key_phrases)
             else:
                 phrases.append([])
+    lyrics['Phrases'] = phrases
 
     print("Key phrases extracted.")
-    return zip(lyrics, phrases)
+    return lyrics
 

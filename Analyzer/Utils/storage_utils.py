@@ -1,7 +1,7 @@
 import collections.abc
 
 import pandas
-from azure.data.tables import TableServiceClient
+from azure.data.tables import TableServiceClient, TableTransactionError
 from azure.storage.blob import BlobServiceClient
 
 from Analyzer.Model import constants
@@ -60,6 +60,10 @@ def get_partition_key(artists):
     return artist
 
 
+def get_row_key(spotify_id):
+    return spotify_id.replace('/', '')
+
+
 # Partition key: first artist name
 # Row key: song spotify id - from the class itself (id.name? for easier search?)
 def create_lyric_table_operation(track_row):
@@ -77,24 +81,27 @@ def create_lyric_table_operation(track_row):
 def store_lyrics(tracks):
     operations = pandas.DataFrame()
     operations['PartitionKey'] = list(map(get_partition_key, tracks['Artists']))
-    operations['RowKey'] = list(tracks['SpotifyId'].replace('/', ''),)
+    operations['RowKey'] = list(tracks['SpotifyId'].replace('/', ''), )
     operations['Operation'] = list(map(create_lyric_table_operation, tracks.iterrows()))
 
     grouped = operations.groupby(['PartitionKey', 'RowKey']).agg(list)
 
     for _, group in grouped.iterrows():
-        store_transaction(constants.LYRICS_TABLE_NAME, group['Operation'])
+        try:
+            store_transaction(constants.LYRICS_TABLE_NAME, group['Operation'])
+        except TableTransactionError as t:
+            print("Store error occurred, song not stored." + str(t))
 
 
 def store_sentiment(sentiments):
     table_client = get_table_client(constants.SENTIMENT_TABLE_NAME)
 
-    for lyrics, sentiment in sentiments:
+    for _, lyrics in sentiments.iterrows():
         entity = {
-            'PartitionKey': lyrics['PartitionKey'],
-            'RowKey': lyrics['RowKey'],
+            'PartitionKey': get_partition_key(lyrics['Artists']),
+            'RowKey': get_row_key(lyrics['SpotifyId']),
             'Name': lyrics['Name'],
-            'Sentiment': sentiment
+            'Sentiment': lyrics['Sentiment']
         }
         table_client.create_entity(entity)
 
@@ -102,12 +109,12 @@ def store_sentiment(sentiments):
 def store_phrases(phrases):
     table_client = get_table_client(constants.PHRASES_TABLE_NAME)
 
-    for lyrics, phrase in phrases:
+    for _, lyrics in phrases.iterrows():
         entity = {
-            'PartitionKey': lyrics['PartitionKey'],
-            'RowKey': lyrics['RowKey'],
+            'PartitionKey': get_partition_key(lyrics['Artists']),
+            'RowKey': get_row_key(lyrics['SpotifyId']),
             'Name': lyrics['Name'],
-            'Phrases': ",".join(phrase)
+            'Phrases': ",".join(lyrics['Phrases'])
         }
         table_client.create_entity(entity)
 

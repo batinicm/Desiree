@@ -80,7 +80,6 @@ def get_track_by_id(song_id):
     return response
 
 
-
 # Get Spotify track info about a track searching by song name
 def get_track(song_name, artist):
     sp = spotipy.Spotify(client_credentials_manager=get_client_credentials())

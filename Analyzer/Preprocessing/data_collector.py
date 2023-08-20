@@ -23,24 +23,33 @@ def get_kaggle_data():
     return complete_data
 
 
+def analyze(lyrics):
+    sentiment_analyzed = analyzer_utils.analyze_text(lyrics)
+    storage_utils.store_sentiment(sentiment_analyzed)
+    phrases = analyzer_utils.extract_key_phrases(lyrics)
+    storage_utils.store_phrases(phrases)
+
+
 # For the offline part of the application, we create the initial dataset by using 2 methods of data collection:
 #   1. Scraping Spotify and Genius lyrics
 #   2. Pre-compiled list of lyrics from Kaggle
 if __name__ == '__main__':
     if not storage_utils.check_storage_created(constants.LYRICS_TABLE_NAME):
         for playlist in constants.ALL_OUT_PLAYLIST_IDS:
-            tracks = lyric_fetch_utils.get_tracks(playlist)
+            tracks = lyric_fetch_utils.get_tracks(playlist)[0:10]
             lyrics = map(lyric_fetch_utils.get_lyrics, tracks)
             lyrics = analyzer_utils.prepare_scraped_lyrics_for_analysis(lyrics)
             storage_utils.store_lyrics(lyrics)
 
-        kaggle_data = get_kaggle_data()
-        analyzer_utils.prepare_kaggle_lyrics_for_analysis(kaggle_data)
-        storage_utils.store_lyrics(kaggle_data)
+            analyze(lyrics)
 
-    lyrics = list(storage_utils.get_from_storage(constants.LYRICS_TABLE_NAME))
-    sentiment_analyzed = list(analyzer_utils.analyze_text(lyrics))
-    storage_utils.store_sentiment(sentiment_analyzed)
-    phrases = list(analyzer_utils.extract_key_phrases(lyrics))
-    storage_utils.store_phrases(phrases)
+    kaggle_data = get_kaggle_data()
+    kaggle_data = kaggle_data.head(10)
+    analyzer_utils.prepare_kaggle_lyrics_for_analysis(kaggle_data)
+    storage_utils.store_lyrics(kaggle_data)
+    analyze(kaggle_data)
+
+
+
+
 

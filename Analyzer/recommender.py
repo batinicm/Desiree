@@ -54,11 +54,6 @@ def recommend_in_existing(song_id):
     recommendations = recommendations[recommendations['RowKey'] != song_id]
     return list(recommendations['RowKey'])
 
-# def recommend():
-# For recommendation: tokenize all data, find similarities matrix for other songs and put out top 10 songs
-# ranked by similarity with the input song
-# similarities = cosine_similarity(tfidf_matrix)
-
 
 # General flow of action:
 # search for song name and artist - through spotify api get id
