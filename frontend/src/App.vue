@@ -51,27 +51,7 @@
                 </button>
             </div>
 
-            <button @click="openMenu = !openMenu" :class="openMenu ? 'bg-[#282828]' : 'bg-black'"
-                class="bg-black hover:bg-[#282828] rounded-full p-0.5 mr-8 mt-0.5 cursor-pointer">
-                <div class="flex items-center">
-                    <img 
-                      class="rounded-full" 
-                      width="27"
-                      src="https://w7.pngwing.com/pngs/505/761/png-transparent-login-computer-icons-avatar-icon-monochrome-black-silhouette.png"
-                    >
-                    <div class="text-white text-[14px] ml-1.5 font-semibold font">Login</div>
-                    <ChevronDown v-if="!openMenu" @click="openMenu = true" fillColor="#FFFFFF" :size="25" />
-                    <ChevronUp v-else @click="openMenu = false" fillColor="#FFFFFF" :size="25" />
-                </div>
-            </button>
-
-            <span v-if="openMenu"
-                class="fixed w-[190px] bg-[#282828] shadow-2xl z-50 rounded-sm top-[52px] right-[35px] p-1 cursor-pointer">
-                <ul class="text-gray-200 font-semibold text-[14px]">
-                    <li class="px-3 py-2.5 hover:bg-[#3E3D3D] border-b border-b-gray-600">Profile</li>
-                    <li class="px-3 py-2.5 hover:bg-[#3E3D3D]">Log out</li>
-                </ul>
-            </span>
+            
         </div>
 
 
@@ -87,12 +67,6 @@
                 <RouterLink to="/search">
                     <MenuItem class="ml-[1px]" :iconSize="24" name="Search" iconString="search" pageUrl="/search" />
                 </RouterLink>
-                <RouterLink to="/library">
-                    <MenuItem class="ml-[2px]" :iconSize="23" name="Your Library" iconString="library" pageUrl="/library" />
-                </RouterLink>
-                <div class="py-3.5"></div>
-                <MenuItem :iconSize="24" name="Create Playlist" iconString="playlist" pageUrl="/playlist" />
-                <MenuItem class="-ml-[1px]" :iconSize="27" name="Liked Songs" iconString="liked" pageUrl="/liked" />
             </ul>
             <div class="border-b border-b-gray-700"></div>
         </div>
